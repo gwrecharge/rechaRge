@@ -44,7 +44,7 @@ The script was tested within the research team of Pr Larocque before making it p
 
 Data licenses / restrictions, or usage limitations:
 
-The HydroBudget code, developed by the research team of Pr Larocque, is open-licensed and therefore assigned to a CC0 1.0 licence.
+The HydroBudget code, developed by the research team of Pr Larocque, is open-licensed and therefore assigned to a CC BY licence.
 
 For the application example of the Petite du Chene River, the climate data and river flow observations are provided for training purpose only. They are under a governmental licence (http://www.droitauteur.gouv.qc.ca/copyright.php):
 
