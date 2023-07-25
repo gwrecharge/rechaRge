@@ -12,4 +12,6 @@ inst/doc
 vignettes/*.R
 vignettes/*.html
 *.html
+inst/examples/simulation_*
 .httr-oauth
+docs

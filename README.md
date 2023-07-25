@@ -1,4 +1,4 @@
-# rechaRge
+# rechaRge [![CRAN status](https://www.r-pkg.org/badges/version/rechaRge)](https://CRAN.R-project.org/package=rechaRge)
 
 Original material from **HydroBudget – Groundwater recharge model in R** [https://doi.org/10.5683/SP3/EUDV3H](https://doi.org/10.5683/SP3/EUDV3H).
 
