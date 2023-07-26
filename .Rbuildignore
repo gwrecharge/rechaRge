@@ -19,3 +19,4 @@
 ^rechaRge\.Rproj$
 ^LICENSE\.md$
 simulation_HydroBudget*
+^\.github$
