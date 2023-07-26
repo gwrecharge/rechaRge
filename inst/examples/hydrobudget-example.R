@@ -52,10 +52,44 @@ rechaRge::compute_hydrobudget(
 )
 # list simulation output files
 list.files(sim_dir)
+
 data.table::fread(file.path(sim_dir, "01_bilan_spat_month.csv"))
 data.table::fread(file.path(sim_dir, "02_bilan_unspat_month.csv"))
 data.table::fread(file.path(sim_dir, "03_bilan_unspat_month_23702.csv"))
 data.table::fread(file.path(sim_dir, "04_simulation_metadata.csv"))
+
+# data viz
+library(tidyterra)
+library(terra)
+library(ggplot2)
+subtitle <- paste0("From ", simul_period[1], " to ", simul_period[2])
+runoff <- terra::rast(file.path(sim_dir, "05_interannual_runoff_NAD83.tif"))
+ggplot() +
+  geom_spatraster(data = runoff) +
+  scale_fill_viridis_c(option = "inferno") +
+  labs(
+    fill = "",
+    title = "Runoff",
+    subtitle = subtitle
+  )
+aet <- terra::rast(file.path(sim_dir, "06_interannual_aet_NAD83.tif"))
+ggplot() +
+  geom_spatraster(data = aet) +
+  scale_fill_viridis_c(option = "inferno") +
+  labs(
+    fill = "",
+    title = "AET",
+    subtitle = subtitle
+  )
+gwr <- terra::rast(file.path(sim_dir, "07_interannual_gwr_NAD83.tif"))
+ggplot() +
+  geom_spatraster(data = gwr) +
+  scale_fill_viridis_c(option = "inferno") +
+  labs(
+    fill = "",
+    title = "Ground water recharge",
+    subtitle = subtitle
+  )
 
 # 5-Clean simulated data ####
 unlink(sim_dir, recursive = TRUE)

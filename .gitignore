@@ -15,3 +15,4 @@ vignettes/*.html
 inst/examples/simulation_*
 .httr-oauth
 docs
+simulation_*
