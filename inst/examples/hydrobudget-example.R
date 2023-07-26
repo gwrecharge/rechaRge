@@ -3,7 +3,7 @@ remotes::install_github("gwrecharge/rechaRge", ref = "dev")
 
 # 2-Load the input data for the simulation and enter the parameters values ####
 ## 2.1-Create the folder to save the simulation results ####
-sim_dir <- file.path(tempdir(), paste0("simulation_HydroBudget_", format(Sys.time(), "%Y%m%dT%H:%M")))
+sim_dir <- file.path(getwd(), paste0("simulation_HydroBudget_", format(Sys.time(), "%Y%m%dT%H:%M")))
 
 ## 2.2-Input data ####
 # use input example files provided by the package 
