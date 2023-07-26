@@ -78,7 +78,7 @@ ggplot() +
   scale_fill_viridis_c(option = "inferno") +
   labs(
     fill = "",
-    title = "AET",
+    title = "Actual Evapotranspiration",
     subtitle = subtitle
   )
 gwr <- terra::rast(file.path(sim_dir, "07_interannual_gwr_NAD83.tif"))
@@ -87,7 +87,7 @@ ggplot() +
   scale_fill_viridis_c(option = "inferno") +
   labs(
     fill = "",
-    title = "Ground water recharge",
+    title = "Ground Water Recharge",
     subtitle = subtitle
   )
 
