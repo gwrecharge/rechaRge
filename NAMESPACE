@@ -2,6 +2,7 @@
 
 export(compute_hydrobudget)
 export(process_river_flow)
+import(progress)
 importFrom(airGR,PE_Oudin)
 importFrom(data.table,":=")
 importFrom(data.table,data.table)

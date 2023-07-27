@@ -41,8 +41,11 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
+  pb <- .newProgress(total = 5)
   
   # 1.1-Load the input data ####
+  .updateProgress(pb, step = 1, total = 5, tokens = list(what = "Checking input data..."))
+  # TODO sanity checks
   param <- param
   input_rcn <- input_rcn
   input_rcn_gauging <- input_rcn_gauging
@@ -54,8 +57,8 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
 
   # 1.2-cluster parameters ####
   ifelse(is.null(nb_core),
-         nb_core <- detectCores() - 1,
-         nb_core <- as.numeric(nb_core)
+    nb_core <- detectCores() - 1,
+    nb_core <- as.numeric(nb_core)
   )
 
   # 1.3-Simulation period ####
@@ -77,199 +80,20 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   sw_m <- param$sw_m
   f_inf <- param$f_inf
   sw_init <- 50
+  
+  # 1.4.2 Coordinate reference system
+  crs <- "+proj=lcc +lat_1=60 +lat_2=46 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
 
   # 1.5-execute the snow model and compute Oudin PET ####
-  # 1.5.1-Parallel loop ####
-  cluster <- makeCluster(nb_core) # if on a computer with windows
-  registerDoParallel(cluster) # if on a computer with windows
-  # registerDoMC(nb_core)        #if on a server - DoParallel does not work, use that instead (doMC)
-
-  climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_cell))), .combine = rbind, .inorder = FALSE) %dopar% {
-    # 1.5.1.1-load the packages ####
-    requireNamespace("data.table")
-    requireNamespace("airGR")
-
-    # 1.5.1.2-loop for the snowpack ####
-    cellgrid <- as.character(unique(climate_data$climate_cell)[k])
-    input_dd <- climate_data[climate_cell == cellgrid]
-    input_dd$snow <- ifelse(input_dd$t_mean < T_snow, input_dd$p_tot, 0)
-    input_dd$rain <- ifelse(input_dd$t_mean > T_snow, input_dd$p_tot, 0)
-    input_dd$dd <- ifelse(input_dd$t_mean - T_m > 0, input_dd$t_mean - T_m, 0)
-    input_dd$melt <- NA
-    input_dd$storage <- NA
-    for (y in 1:nrow(input_dd)) {
-      # y<-1
-      input_dd$melt[y] <- ifelse(y == 1, ifelse(input_dd$dd[y] * C_m < 0, input_dd$dd[y] * C_m, 0),
-        ifelse(input_dd$dd[y] * C_m < input_dd$storage[y - 1],
-          input_dd$dd[y] * C_m,
-          input_dd$storage[y - 1]
-        )
-      )
-      input_dd$storage[y] <- ifelse(y == 1,
-        ifelse(0 + input_dd$snow[y] - input_dd$melt[y] > 0,
-          0 + input_dd$snow[y] - input_dd$melt[y], 0
-        ),
-        ifelse(input_dd$storage[y - 1] + input_dd$snow[y] - input_dd$melt[y] > 0,
-          input_dd$storage[y - 1] + input_dd$snow[y] - input_dd$melt[y], 0
-        )
-      )
-    }
-    # 1.5.1.3-compute Oudin PET ####
-    input_dd$PET <- round(PE_Oudin(
-      JD = yday(as.POSIXct(paste(input_dd$year, input_dd$month, input_dd$day, sep = "-"), format = "%Y-%m-%d")),
-      Temp = input_dd$t_mean,
-      Lat = unique(input_dd$lat),
-      # the name of the cells is long-lat binded, so the last 3 numbers are the latitude with 1 digit
-      LatUnit = "deg", TimeStepIn = "daily", TimeStepOut = "daily"
-    ), 2)
-    rm(y)
-    input_dd
-  }
-  stopCluster(cluster) # to be muted if doMC is used instead of doParallel
-
-  # 1.5.2-Compute vertical inflow (VI) ####
-  climate_data_VI$VI <- climate_data_VI$rain + climate_data_VI$melt
-  climate_data <- climate_data_VI[, c(1:6, 14, 13)]
-
-  # 1.5.3-Clean ####
-  rm(climate_data_VI, cluster)
-  gc()
+  .updateProgress(pb, step = 2, total = 5, tokens = list(what = "Computing vertical inflow..."))
+  climate_data <- compute_vertical_inflow(climate_data, T_m, C_m, T_snow, nb_core)
 
   # 1.6-run HB water budget partitioning ####
   # 1.6.1-Model loop by grid cell in parallel #####
-  unique_rcn_cell <- unique(input_rcn$cell_ID)
+  .updateProgress(pb, step = 3, total = 5, tokens = list(what = "Computing water budget..."))
+  water_budget <- compute_water_budget(climate_data, input_rcn, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init, nb_core)
 
-  cluster <- makeCluster(nb_core)
-  registerDoParallel(cluster)
-  # registerDoMC(nb_core)          #if on a server - DoParallel does not work, use that instead (doMC)
-
-  water_budget <- foreach(j = 1:(length(unique_rcn_cell)), .combine = rbind, .inorder = FALSE) %dopar% {
-    requireNamespace("data.table")
-    requireNamespace("zoo")
-    # 1.6.1.1-subsets ####
-    rcn_subset <- input_rcn[cell_ID == unique_rcn_cell[j]]
-    rcn_climate <- merge(rcn_subset, climate_data, by = "climate_cell", all.x = TRUE)
-    rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_cell, rcn_climate$cell_ID, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
-
-    # 1.6.1.2-Mean temperature function of F_T ####
-    roll_mean_freez <- as.numeric(rollmean(as.numeric(rcn_climate$t_mean), F_T, fill = NA, na.pad = T, align = "right"))
-    rcn_climate$temp_freez <- ifelse(is.na(roll_mean_freez), rcn_climate$t_mean, roll_mean_freez)
-    rm(roll_mean_freez)
-
-    # 1.6.1.3-API computation ####
-    roll_sum_api <- as.numeric(rollsum(rcn_climate$VI, t_API, fill = NA, na.pad = T, align = "right"))
-    rcn_climate$api <- ifelse(is.na(roll_sum_api), rcn_climate$VI, roll_sum_api)
-    rm(roll_sum_api)
-
-    # 1.6.1.4-RCN variations based on API ####
-    rcn_api <- data.table(
-      "year" = as.numeric(rcn_climate$year),
-      "month" = as.numeric(rcn_climate$month),
-      "day" = as.numeric(rcn_climate$day),
-      "julian_day" = yday(as.POSIXct(paste(rcn_climate$year, rcn_climate$month, rcn_climate$day, sep = "-"), format = "%Y-%m-%d")),
-      "temperature_moy" = as.numeric(rcn_climate$t_mean),
-      "temp_freez" = as.numeric(rcn_climate$temp_freez),
-      "rcn_II" = as.numeric(rcn_climate$RCNII * f_runoff),
-      "api" = as.numeric(rcn_climate$api)
-    )
-    rcn_api$rcn3 <- ((-0.00563) * rcn_api$rcn_II^2) + (1.45535 * rcn_api$rcn_II) + 10.82878 # function from Monfet (1979)
-    rcn_api$rcn1 <- (0.00865 * rcn_api$rcn_II^2) + (0.0148 * rcn_api$rcn_II) + 7.39846 # function from Monfet (1979)
-    rcn_api$season <- ifelse(rcn_api$julian_day < 121 | rcn_api$julian_day > 283, 1, # for winter (value of 1)
-      ifelse((rcn_api$julian_day > 120 & rcn_api$julian_day < 181) | (rcn_api$julian_day > 243 & rcn_api$julian_day < 284), 2, # for spring and fall (value of 2)
-        0
-      )
-    ) # for summer (value of 0)
-    rcn_api$rcn_wint <- ifelse(rcn_api$season == 1, ifelse(rcn_api$api > 22, rcn_api$rcn3, ifelse(rcn_api$api < 11, rcn_api$rcn1, rcn_api$rcn_II)), 0)
-    rcn_api$rcn_spr_fall <- ifelse(rcn_api$season == 2, ifelse(rcn_api$api > 37, rcn_api$rcn3, ifelse(rcn_api$api < 18.5, rcn_api$rcn1, rcn_api$rcn_II)), 0)
-    rcn_api$rcn_summ <- ifelse(rcn_api$season == 0, ifelse(rcn_api$api < 50, rcn_api$rcn1, ifelse(rcn_api$api > 80, rcn_api$rcn3, rcn_api$rcn_II)), 0)
-
-    if (rcn_subset$RCNII == 100) { # is the RCNII value = 100 (water, wetlands)
-      rcn_api$rcn_api <- ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
-        100, # if yes, RCN = 100 % (just runoff)
-        10
-      ) # if no, consider RCN = 10
-    } else {
-      rcn_api$rcn_api <- ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
-        100, # if yes, RCN = 100 % (just runoff)
-        rcn_api$rcn_summ + rcn_api$rcn_spr_fall + rcn_api$rcn_wint
-      )
-    }
-    rcn_climate$rcn_api <- rcn_api$rcn_api
-    rm(rcn_api)
-
-    # 1.6.1.5-Runoff computation ####
-    sat <- (1000 / rcn_climate$rcn_api) - 10 # function from Monfet (1979)
-    rcn_climate$runoff <- (rcn_climate$VI - (0.2 * sat))^2 / (rcn_climate$VI + (0.8 * sat)) # function from Monfet (1979)
-    rcn_climate$runoff <- ifelse(rcn_climate$VI > (0.2 * sat), rcn_climate$runoff, 0) # function from Monfet (1979)
-
-    # 1.6.1.6-Available water that reaches the soil reservoir ####
-    rcn_climate$available_water <- ifelse((rcn_climate$VI - rcn_climate$runoff) < 0, 0, rcn_climate$VI - rcn_climate$runoff)
-
-    # 1.6.1.7- AET and GWR computation ####
-    budget1 <- vector()
-    gwr <- vector()
-    budget2 <- vector()
-    pet_list <- rcn_climate$PET
-    available_water_list <- rcn_climate$available_water
-    aet <- vector()
-    delta_reservoir <- vector()
-    runoff_2 <- vector()
-    for (ii in 1:nrow(rcn_climate)) {
-      if (ii == 1) {
-        budget1[ii] <- 0
-        gwr[ii] <- 0
-        budget2[ii] <- sw_init
-        aet[ii] <- 0
-        runoff_2 <- 0
-      } else {
-        budget1[ii] <- ifelse((budget2[ii - 1] + available_water_list[ii]) > sw_m, sw_m, budget2[ii - 1] + available_water_list[ii])
-        aet[ii] <- min(budget1[ii], pet_list[ii])
-        gwr[ii] <- ifelse(rcn_subset$RCNII == 100, # is the cell water or wetland?
-          0, # if yes, no gwr
-          (budget1[ii] - aet[ii]) * ((budget1[ii] / sw_m) * f_inf)
-        ) # if not, normal gwr computation
-        budget2[ii] <- budget1[ii] - aet[ii] - gwr[ii]
-        runoff_2[ii] <- ifelse((available_water_list[ii] + budget1[ii]) > sw_m, (available_water_list[ii] + budget1[ii]) - sw_m, 0)
-      }
-    }
-    rm(ii)
-    delta_reservoir <- as.numeric(c(0, diff(budget2)))
-
-    # 1.6.1.8- compute results ####
-    w_b <- data.table(
-      "climate_cell" = as.integer(rcn_climate$climate_cell),
-      "rcn_cell" = as.integer(rcn_climate$ID),
-      "year" = as.integer(rcn_climate$year),
-      "month" = as.integer(rcn_climate$month),
-      "day" = as.integer(rcn_climate$day),
-      "VI" = as.numeric(rcn_climate$VI),
-      "t_mean" = as.numeric(rcn_climate$t_mean),
-      "runoff" = as.numeric(rcn_climate$runoff),
-      # "available_water" = as.numeric(available_water$available_water),
-      "pet" = as.numeric(rcn_climate$PET),
-      # "vadose" =  as.numeric(budget2),
-      "delta_reservoir" = as.numeric(delta_reservoir),
-      "aet" = as.numeric(aet),
-      "gwr" = as.numeric(gwr),
-      "runoff_2" = as.numeric(runoff_2)
-    )
-    w_b <- w_b[, .(
-      VI = sum(VI),
-      t_mean = mean(t_mean),
-      runoff = sum(runoff),
-      # available_water = sum(available_water),
-      pet = sum(pet),
-      aet = sum(aet),
-      gwr = sum(gwr),
-      runoff_2 = sum(runoff_2),
-      delta_reservoir = sum(delta_reservoir)
-    ), .(year, month)]
-    w_b[, (names(w_b)[3:ncol(w_b)]) := round(.SD, 1), .SDcols = names(w_b)[3:ncol(w_b)]]
-    w_b[, rcn_cell := unique_rcn_cell[j]]
-    w_b
-  }
-  stopCluster(cluster) # to be muted if doMC is used instead of doParallel
-
+  .updateProgress(pb, step = 4, total = 5, tokens = list(what = "Writing results..."))
   # 1.6.2-write results ####
   fwrite(water_budget, file.path(output_dir, "01_bilan_spat_month.csv"))
   budget_unspat <- water_budget[, .(
@@ -286,7 +110,7 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   fwrite(budget_unspat, file.path(output_dir, "02_bilan_unspat_month.csv"))
 
   # 1.6.3-Clean ####
-  rm(unique_rcn_cell, cluster, input_climate)
+  rm(input_climate)
   gc()
 
   # 1.7-result by gauging station, error computation ####
@@ -436,7 +260,224 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
     }
     rm(calibration_start, calibration_end, validation_start, validation_end, flow_beg, flow_end)
   }
+  
   # 1.8-export raster for interannual runoff, aet and GWR ####
+  write_rasters(output_dir, water_budget, input_rcn, crs)
+  
+  # 1.9-Clean ####
+  rm(
+    st, comparison_month, budget_unspat, observed_flow_month, input_rcn_gauging, water_budget, input_rcn, climate_data,
+    runoff
+  )
+  gc()
+  .updateProgress(pb, step = 5, total = 5, tokens = list(what = "Completed"))
+  invisible(output_dir)
+}
+
+#' Determine if precipitation is rain or snow and simulate the snowpack (accumulation
+#' and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).
+#' @keywords internal
+compute_vertical_inflow <- function(climate_data, T_m, C_m, T_snow, nb_core) {
+  # 1.5-execute the snow model and compute Oudin PET ####
+  # 1.5.1-Parallel loop ####
+  cluster <- .make_cluster(nb_core)
+  climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_cell))), .combine = rbind, .inorder = FALSE) %dopar% {
+    cellgrid <- as.character(unique(climate_data$climate_cell)[k])
+    input_dd <- climate_data[climate_cell == cellgrid]
+    compute_potential_evapotranspiration_cell(cellgrid, input_dd, T_m, C_m, T_snow)
+  }
+  .stop_cluster(cluster)
+  rm(cluster)
+
+  # 1.5.2-Compute vertical inflow (VI) ####
+  climate_data_VI$VI <- climate_data_VI$rain + climate_data_VI$melt
+  climate_data_VI[, c(1:6, 14, 13)]
+}
+
+#' Compute potential evapotranspiration (PET) based on the Oudin formula for a single cell.
+#' @keywords internal
+compute_potential_evapotranspiration_cell <- function(cellgrid, input_dd, T_m, C_m, T_snow) {
+  # 1.5.1.1-load the packages ####
+  requireNamespace("data.table")
+  requireNamespace("airGR")
+
+  # 1.5.1.2-loop for the snowpack ####
+  input_dd$snow <- ifelse(input_dd$t_mean < T_snow, input_dd$p_tot, 0)
+  input_dd$rain <- ifelse(input_dd$t_mean > T_snow, input_dd$p_tot, 0)
+  input_dd$dd <- ifelse(input_dd$t_mean - T_m > 0, input_dd$t_mean - T_m, 0)
+  input_dd$melt <- NA
+  input_dd$storage <- NA
+  for (y in 1:nrow(input_dd)) {
+    # y<-1
+    input_dd$melt[y] <- ifelse(y == 1, ifelse(input_dd$dd[y] * C_m < 0, input_dd$dd[y] * C_m, 0),
+      ifelse(input_dd$dd[y] * C_m < input_dd$storage[y - 1],
+        input_dd$dd[y] * C_m,
+        input_dd$storage[y - 1]
+      )
+    )
+    input_dd$storage[y] <- ifelse(y == 1,
+      ifelse(0 + input_dd$snow[y] - input_dd$melt[y] > 0,
+        0 + input_dd$snow[y] - input_dd$melt[y], 0
+      ),
+      ifelse(input_dd$storage[y - 1] + input_dd$snow[y] - input_dd$melt[y] > 0,
+        input_dd$storage[y - 1] + input_dd$snow[y] - input_dd$melt[y], 0
+      )
+    )
+  }
+  # 1.5.1.3-compute Oudin PET ####
+  input_dd$PET <- round(PE_Oudin(
+    JD = yday(as.POSIXct(paste(input_dd$year, input_dd$month, input_dd$day, sep = "-"), format = "%Y-%m-%d")),
+    Temp = input_dd$t_mean,
+    Lat = unique(input_dd$lat),
+    # the name of the cells is long-lat binded, so the last 3 numbers are the latitude with 1 digit
+    LatUnit = "deg", TimeStepIn = "daily", TimeStepOut = "daily"
+  ), 2)
+
+  input_dd
+}
+
+compute_water_budget <- function(climate_data, input_rcn, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init, nb_core) {
+  cluster <- .make_cluster(nb_core)
+  unique_rcn_cell <- unique(input_rcn$cell_ID)
+  water_budget <- foreach(j = 1:(length(unique_rcn_cell)), .combine = rbind, .inorder = FALSE) %dopar% {
+    # 1.6.1.1-subsets ####
+    rcn_subset <- input_rcn[cell_ID == unique_rcn_cell[j]]
+    rcn_climate <- merge(rcn_subset, climate_data, by = "climate_cell", all.x = TRUE)
+    rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_cell, rcn_climate$cell_ID, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
+    compute_water_budget_cell(rcn_climate, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init)
+  }
+  .stop_cluster(cluster)
+  rm(unique_rcn_cell, cluster)
+
+  water_budget
+}
+
+compute_water_budget_cell <- function(rcn_climate, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init) {
+  requireNamespace("data.table")
+  requireNamespace("zoo")
+  
+  # 1.6.1.2-Mean temperature function of F_T ####
+  roll_mean_freez <- as.numeric(rollmean(as.numeric(rcn_climate$t_mean), F_T, fill = NA, na.pad = T, align = "right"))
+  rcn_climate$temp_freez <- ifelse(is.na(roll_mean_freez), rcn_climate$t_mean, roll_mean_freez)
+  rm(roll_mean_freez)
+
+  # 1.6.1.3-API computation ####
+  roll_sum_api <- as.numeric(rollsum(rcn_climate$VI, t_API, fill = NA, na.pad = T, align = "right"))
+  rcn_climate$api <- ifelse(is.na(roll_sum_api), rcn_climate$VI, roll_sum_api)
+  rm(roll_sum_api)
+
+  # 1.6.1.4-RCN variations based on API ####
+  RCNII <- unique(rcn_climate$RCNII)
+  rcn_api <- data.table(
+    "year" = as.numeric(rcn_climate$year),
+    "month" = as.numeric(rcn_climate$month),
+    "day" = as.numeric(rcn_climate$day),
+    "julian_day" = yday(as.POSIXct(paste(rcn_climate$year, rcn_climate$month, rcn_climate$day, sep = "-"), format = "%Y-%m-%d")),
+    "temperature_moy" = as.numeric(rcn_climate$t_mean),
+    "temp_freez" = as.numeric(rcn_climate$temp_freez),
+    "rcn_II" = as.numeric(RCNII * f_runoff),
+    "api" = as.numeric(rcn_climate$api)
+  )
+  rcn_api$rcn3 <- ((-0.00563) * rcn_api$rcn_II^2) + (1.45535 * rcn_api$rcn_II) + 10.82878 # function from Monfet (1979)
+  rcn_api$rcn1 <- (0.00865 * rcn_api$rcn_II^2) + (0.0148 * rcn_api$rcn_II) + 7.39846 # function from Monfet (1979)
+  rcn_api$season <- ifelse(rcn_api$julian_day < 121 | rcn_api$julian_day > 283, 1, # for winter (value of 1)
+    ifelse((rcn_api$julian_day > 120 & rcn_api$julian_day < 181) | (rcn_api$julian_day > 243 & rcn_api$julian_day < 284), 2, # for spring and fall (value of 2)
+      0
+    )
+  ) # for summer (value of 0)
+  rcn_api$rcn_wint <- ifelse(rcn_api$season == 1, ifelse(rcn_api$api > 22, rcn_api$rcn3, ifelse(rcn_api$api < 11, rcn_api$rcn1, rcn_api$rcn_II)), 0)
+  rcn_api$rcn_spr_fall <- ifelse(rcn_api$season == 2, ifelse(rcn_api$api > 37, rcn_api$rcn3, ifelse(rcn_api$api < 18.5, rcn_api$rcn1, rcn_api$rcn_II)), 0)
+  rcn_api$rcn_summ <- ifelse(rcn_api$season == 0, ifelse(rcn_api$api < 50, rcn_api$rcn1, ifelse(rcn_api$api > 80, rcn_api$rcn3, rcn_api$rcn_II)), 0)
+
+  # If land use = water or wetland - if frozen rcn = 100 otherwise artificially decrease the RCN value to 10 to allow for maximum water storage on the cell
+  if (RCNII == 100) { # is the RCNII value = 100 (water, wetlands)
+    rcn_api$rcn_api <- ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
+      100, # if yes, RCN = 100 % (just runoff)
+      10
+    ) # if no, consider RCN = 10
+  } else {
+    rcn_api$rcn_api <- ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
+      100, # if yes, RCN = 100 % (just runoff)
+      rcn_api$rcn_summ + rcn_api$rcn_spr_fall + rcn_api$rcn_wint
+    )
+  }
+  rcn_climate$rcn_api <- rcn_api$rcn_api
+  rm(rcn_api)
+
+  # 1.6.1.5-Runoff computation ####
+  sat <- (1000 / rcn_climate$rcn_api) - 10 # function from Monfet (1979)
+  rcn_climate$runoff <- (rcn_climate$VI - (0.2 * sat))^2 / (rcn_climate$VI + (0.8 * sat)) # function from Monfet (1979)
+  rcn_climate$runoff <- ifelse(rcn_climate$VI > (0.2 * sat), rcn_climate$runoff, 0) # function from Monfet (1979)
+
+  # 1.6.1.6-Available water that reaches the soil reservoir ####
+  rcn_climate$available_water <- ifelse((rcn_climate$VI - rcn_climate$runoff) < 0, 0, rcn_climate$VI - rcn_climate$runoff)
+
+  # 1.6.1.7- AET and GWR computation ####
+  budget1 <- vector()
+  gwr <- vector()
+  budget2 <- vector()
+  pet_list <- rcn_climate$PET
+  available_water_list <- rcn_climate$available_water
+  aet <- vector()
+  delta_reservoir <- vector()
+  runoff_2 <- vector()
+  for (ii in 1:nrow(rcn_climate)) {
+    if (ii == 1) {
+      budget1[ii] <- 0
+      gwr[ii] <- 0
+      budget2[ii] <- sw_init
+      aet[ii] <- 0
+      runoff_2 <- 0
+    } else {
+      budget1[ii] <- ifelse((budget2[ii - 1] + available_water_list[ii]) > sw_m, sw_m, budget2[ii - 1] + available_water_list[ii])
+      aet[ii] <- min(budget1[ii], pet_list[ii])
+      # If land use = water or wetland => artificially bloc GWR
+      gwr[ii] <- ifelse(RCNII == 100, # is the cell water or wetland?
+        0, # if yes, no gwr
+        (budget1[ii] - aet[ii]) * ((budget1[ii] / sw_m) * f_inf)
+      ) # if not, normal gwr computation
+      budget2[ii] <- budget1[ii] - aet[ii] - gwr[ii]
+      runoff_2[ii] <- ifelse((available_water_list[ii] + budget1[ii]) > sw_m, (available_water_list[ii] + budget1[ii]) - sw_m, 0)
+    }
+  }
+  rm(ii)
+  delta_reservoir <- as.numeric(c(0, diff(budget2)))
+
+  # 1.6.1.8- compute results ####
+  w_b <- data.table(
+    "climate_cell" = as.integer(rcn_climate$climate_cell),
+    "rcn_cell" = as.integer(rcn_climate$ID),
+    "year" = as.integer(rcn_climate$year),
+    "month" = as.integer(rcn_climate$month),
+    "day" = as.integer(rcn_climate$day),
+    "VI" = as.numeric(rcn_climate$VI),
+    "t_mean" = as.numeric(rcn_climate$t_mean),
+    "runoff" = as.numeric(rcn_climate$runoff),
+    # "available_water" = as.numeric(available_water$available_water),
+    "pet" = as.numeric(rcn_climate$PET),
+    # "vadose" =  as.numeric(budget2),
+    "delta_reservoir" = as.numeric(delta_reservoir),
+    "aet" = as.numeric(aet),
+    "gwr" = as.numeric(gwr),
+    "runoff_2" = as.numeric(runoff_2)
+  )
+  w_b <- w_b[, .(
+    VI = sum(VI),
+    t_mean = mean(t_mean),
+    runoff = sum(runoff),
+    # available_water = sum(available_water),
+    pet = sum(pet),
+    aet = sum(aet),
+    gwr = sum(gwr),
+    runoff_2 = sum(runoff_2),
+    delta_reservoir = sum(delta_reservoir)
+  ), .(year, month)]
+  w_b[, (names(w_b)[3:ncol(w_b)]) := round(.SD, 1), .SDcols = names(w_b)[3:ncol(w_b)]]
+  w_b[, rcn_cell := rcn_climate$cell_ID[1]]
+  w_b
+}
+
+write_rasters <- function(output_dir, water_budget, input_rcn, crs) {
   budget_month_spat <- water_budget[
     , .(runoff = sum(runoff + runoff_2, na.rm = TRUE), aet = sum(aet, na.rm = TRUE), gwr = sum(gwr, na.rm = TRUE)),
     .(rcn_cell, year)
@@ -447,27 +488,21 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   runoff <- x_interannual[, .(x = X_L93, y = Y_L93, z = runoff)]
   aet <- x_interannual[, .(x = X_L93, y = Y_L93, z = aet)]
   gwr <- x_interannual[, .(x = X_L93, y = Y_L93, z = gwr)]
-
+  
   sp::coordinates(runoff) <- ~ x + y
-  runoff <- rasterFromXYZ(runoff, crs = "+proj=lcc +lat_1=60 +lat_2=46 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  runoff <- rasterFromXYZ(runoff, crs = crs)
   runoff <- setMinMax(runoff)
   writeRaster(runoff, filename = file.path(output_dir, "05_interannual_runoff_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
-
+  
   sp::coordinates(aet) <- ~ x + y
-  aet <- rasterFromXYZ(aet, crs = "+proj=lcc +lat_1=60 +lat_2=46 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  aet <- rasterFromXYZ(aet, crs = crs)
   aet <- setMinMax(aet)
   writeRaster(aet, filename = file.path(output_dir, "06_interannual_aet_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
-
+  
   sp::coordinates(gwr) <- ~ x + y
-  gwr <- rasterFromXYZ(gwr, crs = "+proj=lcc +lat_1=60 +lat_2=46 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs")
+  gwr <- rasterFromXYZ(gwr, crs = crs)
   gwr <- setMinMax(gwr)
   writeRaster(gwr, filename = file.path(output_dir, "07_interannual_gwr_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
 
-  # 1.9-Clean ####
-  rm(
-    st, comparison_month, budget_unspat, observed_flow_month, input_rcn_gauging, water_budget, input_rcn, climate_data,
-    budget_month_spat, x_interannual, runoff, aet, gwr
-  )
-  gc()
-  invisible(output_dir)
+  rm(aet, budget_month_spat, gwr, x_interannual)  
 }
