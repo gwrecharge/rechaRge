@@ -62,9 +62,10 @@ data.table::fread(file.path(sim_dir, "04_simulation_metadata.csv"))
 library(tidyterra)
 library(terra)
 library(ggplot2)
+library(cowplot)
 subtitle <- paste0("From ", simul_period[1], " to ", simul_period[2])
 runoff <- terra::rast(file.path(sim_dir, "05_interannual_runoff_NAD83.tif"))
-ggplot() +
+runoffplot <- ggplot() +
   geom_spatraster(data = runoff) +
   scale_fill_viridis_c(option = "inferno") +
   labs(
@@ -73,7 +74,7 @@ ggplot() +
     subtitle = subtitle
   )
 aet <- terra::rast(file.path(sim_dir, "06_interannual_aet_NAD83.tif"))
-ggplot() +
+aetplot <- ggplot() +
   geom_spatraster(data = aet) +
   scale_fill_viridis_c(option = "inferno") +
   labs(
@@ -82,7 +83,7 @@ ggplot() +
     subtitle = subtitle
   )
 gwr <- terra::rast(file.path(sim_dir, "07_interannual_gwr_NAD83.tif"))
-ggplot() +
+gwrplot <- ggplot() +
   geom_spatraster(data = gwr) +
   scale_fill_viridis_c(option = "inferno") +
   labs(
@@ -90,6 +91,7 @@ ggplot() +
     title = "Ground Water Recharge",
     subtitle = subtitle
   )
+cowplot::plot_grid(runoffplot, aetplot, gwrplot)
 
 # 5-Clean simulated data ####
 unlink(sim_dir, recursive = TRUE)
