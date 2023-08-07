@@ -26,6 +26,7 @@ Imports:
     lubridate,
     parallel,
     plyr,
+    progress,
     raster,
     stats,
     sp,
