@@ -95,19 +95,7 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
 
   .updateProgress(pb, step = 4, total = 7, tokens = list(what = "Writing results..."))
   # 1.6.2-write results ####
-  fwrite(water_budget, file.path(output_dir, "01_bilan_spat_month.csv"))
-  budget_unspat <- water_budget[, .(
-    VI = mean(VI),
-    t_mean = mean(t_mean),
-    runoff = mean(runoff),
-    pet = mean(pet),
-    aet = mean(aet),
-    gwr = mean(gwr),
-    runoff_2 = mean(runoff_2),
-    delta_reservoir = mean(delta_reservoir)
-  ), .(year, month)]
-  budget_unspat[, (names(budget_unspat)[3:ncol(budget_unspat)]) := round(.SD, 1), .SDcols = names(budget_unspat)[3:ncol(budget_unspat)]]
-  fwrite(budget_unspat, file.path(output_dir, "02_bilan_unspat_month.csv"))
+  write_results(output_dir, water_budget)
 
   # 1.6.3-Clean ####
   rm(input_climate)
@@ -123,7 +111,7 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   
   # 1.9-Clean ####
   rm(
-    budget_unspat, observed_flow_month, input_rcn_gauging, water_budget, input_rcn, climate_data
+    observed_flow_month, input_rcn_gauging, water_budget, input_rcn, climate_data
   )
   gc()
   .updateProgress(pb, step = 7, total = 7, tokens = list(what = "Completed"))
@@ -481,6 +469,23 @@ compute_simulation_quality_assessment <- function(output_dir, water_budget, gaug
     rm(calibration_start, calibration_end, validation_start, validation_end, flow_beg, flow_end)
   }
   rm(st, comparison_month)
+}
+
+write_results <- function(output_dir, water_budget) {
+  fwrite(water_budget, file.path(output_dir, "01_bilan_spat_month.csv"))
+  budget_unspat <- water_budget[, .(
+    VI = mean(VI),
+    t_mean = mean(t_mean),
+    runoff = mean(runoff),
+    pet = mean(pet),
+    aet = mean(aet),
+    gwr = mean(gwr),
+    runoff_2 = mean(runoff_2),
+    delta_reservoir = mean(delta_reservoir)
+  ), .(year, month)]
+  budget_unspat[, (names(budget_unspat)[3:ncol(budget_unspat)]) := round(.SD, 1), .SDcols = names(budget_unspat)[3:ncol(budget_unspat)]]
+  fwrite(budget_unspat, file.path(output_dir, "02_bilan_unspat_month.csv"))
+  rm(budget_unspat)
 }
 
 write_rasters <- function(output_dir, water_budget, input_rcn, crs) {
