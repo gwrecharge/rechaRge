@@ -41,10 +41,10 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
-  pb <- .newProgress(total = 5)
+  pb <- .newProgress(total = 7)
   
   # 1.1-Load the input data ####
-  .updateProgress(pb, step = 1, total = 5, tokens = list(what = "Checking input data..."))
+  .updateProgress(pb, step = 1, total = 7, tokens = list(what = "Checking input data..."))
   # TODO sanity checks
   param <- param
   input_rcn <- input_rcn
@@ -85,15 +85,15 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   crs <- "+proj=lcc +lat_1=60 +lat_2=46 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs"
 
   # 1.5-execute the snow model and compute Oudin PET ####
-  .updateProgress(pb, step = 2, total = 5, tokens = list(what = "Computing vertical inflow..."))
+  .updateProgress(pb, step = 2, total = 7, tokens = list(what = "Computing vertical inflow..."))
   climate_data <- compute_vertical_inflow(climate_data, T_m, C_m, T_snow, nb_core)
 
   # 1.6-run HB water budget partitioning ####
   # 1.6.1-Model loop by grid cell in parallel #####
-  .updateProgress(pb, step = 3, total = 5, tokens = list(what = "Computing water budget..."))
+  .updateProgress(pb, step = 3, total = 7, tokens = list(what = "Computing water budget..."))
   water_budget <- compute_water_budget(climate_data, input_rcn, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init, nb_core)
 
-  .updateProgress(pb, step = 4, total = 5, tokens = list(what = "Writing results..."))
+  .updateProgress(pb, step = 4, total = 7, tokens = list(what = "Writing results..."))
   # 1.6.2-write results ####
   fwrite(water_budget, file.path(output_dir, "01_bilan_spat_month.csv"))
   budget_unspat <- water_budget[, .(
@@ -114,163 +114,19 @@ compute_hydrobudget <- function(param, input_rcn, input_rcn_gauging, input_clima
   gc()
 
   # 1.7-result by gauging station, error computation ####
-  for (st in 1:length(gauging)) {
-    # 1.7.1-load the modeled data per gauging station ####
-    setkey(water_budget, rcn_cell)
-    budget_month <- water_budget[.(input_rcn_gauging$cell_ID[which(input_rcn_gauging$gauging_stat == gauging[st])])]
-    budget_month <- na.omit(budget_month, invert = FALSE)
-    budget_month <- budget_month[, .(
-      VI = mean(VI),
-      t_mean = mean(t_mean),
-      runoff = mean(runoff),
-      pet = mean(pet),
-      aet = mean(aet),
-      gwr = mean(gwr),
-      runoff_2 = mean(runoff_2),
-      delta_reservoir = mean(delta_reservoir)
-    ), .(year, month)]
-    budget_month$gauging_stat <- gauging[st]
-
-    # 1.7.2-Create the comparison data frame ####
-    cols <- which(colnames(observed_flow_month) %in% c(
-      "year", "month", as.character(unique(budget_month$gauging_stat)),
-      paste(as.character(unique(budget_month$gauging_stat)), "_bf", sep = "")
-    ))
-    comparison_month <- merge(observed_flow_month[, ..cols],
-      budget_month[, 1:(ncol(budget_month) - 1), with = FALSE],
-      by = c("year", "month"), all.x = TRUE
-    )
-    rm(cols)
-    colnames(comparison_month)[1:4] <- c("year", "month", "q", "qbase")
-
-    # 1.7.3-save the simulation results by gauging station ####
-    fwrite(comparison_month, file.path(output_dir, paste0("03_bilan_unspat_month_", gauging[st], ".csv")))
-
-    # 1.7.4-Objective functions ####
-    # combining the error indicators in a data table
-    error_ind <- matrix(ncol = 2, nrow = 2)
-    colnames(error_ind) <- c("month_cal", "month_val")
-    rownames(error_ind) <- c("KGE_qtot", "KGE_baseflow")
-    # defining the periods of data for the observed river flow and base flow per gauging station and separate it in
-    # first 2/3 = calibration period // last 1/3 = validation period
-    flow_beg <- min(na.contiguous(comparison_month[, 1:3])[, 1])
-    flow_end <- max(na.contiguous(comparison_month[, 1:3])[, 1])
-    ifelse(flow_beg < year_start, flow_beg <- year_start, flow_beg <- as.numeric(flow_beg))
-    ifelse(flow_end > year_end, flow_end <- year_end, flow_end <- as.numeric(flow_end))
-    calibration_start <- flow_beg
-    calibration_end <- flow_beg + round((flow_end - flow_beg) * 2 / 3)
-    validation_start <- calibration_end + 1
-    validation_end <- flow_end
-    # defining the modeled and observed on each period for flow and baseflow
-    m_q_month_cal <- (comparison_month$runoff[which(comparison_month$year %in% c(calibration_start:calibration_end))] +
-      comparison_month$runoff_2[which(comparison_month$year %in% c(calibration_start:calibration_end))] +
-      comparison_month$gwr[which(comparison_month$year %in% c(calibration_start:calibration_end))])
-    o_q_month_cal <- comparison_month[[3]][which(comparison_month$year %in% c(calibration_start:calibration_end))]
-    m_q_month_val <- (comparison_month$runoff[which(comparison_month$year %in% c(validation_start:validation_end))] +
-      comparison_month$runoff_2[which(comparison_month$year %in% c(validation_start:validation_end))] +
-      comparison_month$gwr[which(comparison_month$year %in% c(validation_start:validation_end))])
-    o_q_month_val <- comparison_month[[3]][which(comparison_month$year %in% c(validation_start:validation_end))]
-
-    m_baseflow_month_cal <- comparison_month$gwr[which(comparison_month$year %in% c(calibration_start:calibration_end))]
-    o_baseflow_month_cal <- comparison_month[[4]][which(comparison_month$year %in% c(calibration_start:calibration_end))]
-    m_baseflow_month_val <- comparison_month$gwr[which(comparison_month$year %in% c(validation_start:validation_end))]
-    o_baseflow_month_val <- comparison_month[[4]][which(comparison_month$year %in% c(validation_start:validation_end))]
-    # KGE
-    error_ind[1, 1] <- KGE(m_q_month_cal[which(!is.na(o_q_month_cal))],
-      o_q_month_cal[which(!is.na(o_q_month_cal))],
-      na.rm = TRUE
-    )
-    error_ind[1, 2] <- KGE(m_q_month_val[which(!is.na(o_q_month_val))],
-      o_q_month_val[which(!is.na(o_q_month_val))],
-      na.rm = TRUE
-    )
-
-    error_ind[2, 1] <- KGE(m_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
-      o_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
-      na.rm = TRUE
-    )
-    error_ind[2, 2] <- KGE(m_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
-      o_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
-      na.rm = TRUE
-    )
-    # Clean
-    rm(
-      m_q_month_cal, o_q_month_cal, m_q_month_val, o_q_month_val, m_baseflow_month_cal, o_baseflow_month_cal,
-      m_baseflow_month_val, o_baseflow_month_val
-    )
-
-    # 1.7.5-write the simulation metadata in a datatable and save it ####
-    if (st == 1) {
-      simulation_metadata <- data.table(
-        gauging_stat = unique(budget_month$gauging_stat),
-        cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
-        T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
-        f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
-        KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
-        KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
-        qtot_sim = mean(budget_month[
-          , .(qtot = sum(runoff + runoff_2 + gwr, na.rm = TRUE)),
-          .(year)
-        ][[2]]),
-        aet_sim = mean(budget_month[
-          , .(aet = sum(aet, na.rm = TRUE)),
-          .(year)
-        ][[2]]),
-        gwr_sim = mean(budget_month[
-          , .(gwr = sum(gwr, na.rm = TRUE)),
-          .(year)
-        ][[2]]),
-        time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
-        KGE_mean_cal = NA_real_, KGE_mean_val = NA_real_
-      )
-    } else {
-      simulation_metadata <- rbind(
-        simulation_metadata,
-        data.table(
-          gauging_stat = unique(budget_month$gauging_stat),
-          cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
-          T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
-          f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
-          KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
-          KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
-          qtot_sim = mean(budget_month[
-            , .(qtot = sum(runoff + runoff_2 + gwr, na.rm = TRUE)),
-            .(year)
-          ][[2]]),
-          aet_sim = mean(budget_month[
-            , .(aet = sum(aet, na.rm = TRUE)),
-            .(year)
-          ][[2]]),
-          gwr_sim = mean(budget_month[
-            , .(gwr = sum(gwr, na.rm = TRUE)),
-            .(year)
-          ][[2]]),
-          time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
-          KGE_mean_cal = NA_real_, KGE_mean_val = NA_real_
-        )
-      )
-    }
-    if (st == length(gauging)) {
-      simulation_metadata[nrow(simulation_metadata), c("KGE_mean_cal", "KGE_mean_val") := as.list(c(mean((simulation_metadata$KGE_qtot_cal + simulation_metadata$KGE_qbase_cal) / 2),
-        mean((simulation_metadata$KGE_qtot_val + simulation_metadata$KGE_qbase_val) / 2),
-        na.rm = TRUE
-      ))[1:2]]
-      fwrite(simulation_metadata, file.path(output_dir, "04_simulation_metadata.csv"))
-      rm(simulation_metadata)
-    }
-    rm(calibration_start, calibration_end, validation_start, validation_end, flow_beg, flow_end)
-  }
+  .updateProgress(pb, step = 5, total = 7, tokens = list(what = "Computing simulation quality assessment..."))
+  compute_simulation_quality_assessment(output_dir, water_budget, gauging, input_rcn_gauging, observed_flow_month, year_start, year_end, T_snow, T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf)
   
   # 1.8-export raster for interannual runoff, aet and GWR ####
+  .updateProgress(pb, step = 6, total = 7, tokens = list(what = "Writing rasters..."))
   write_rasters(output_dir, water_budget, input_rcn, crs)
   
   # 1.9-Clean ####
   rm(
-    st, comparison_month, budget_unspat, observed_flow_month, input_rcn_gauging, water_budget, input_rcn, climate_data,
-    runoff
+    budget_unspat, observed_flow_month, input_rcn_gauging, water_budget, input_rcn, climate_data
   )
   gc()
-  .updateProgress(pb, step = 5, total = 5, tokens = list(what = "Completed"))
+  .updateProgress(pb, step = 7, total = 7, tokens = list(what = "Completed"))
   invisible(output_dir)
 }
 
@@ -475,6 +331,156 @@ compute_water_budget_cell <- function(rcn_climate, F_T, t_API, f_runoff, TT_F, s
   w_b[, (names(w_b)[3:ncol(w_b)]) := round(.SD, 1), .SDcols = names(w_b)[3:ncol(w_b)]]
   w_b[, rcn_cell := rcn_climate$cell_ID[1]]
   w_b
+}
+
+compute_simulation_quality_assessment <- function(output_dir, water_budget, gauging, input_rcn_gauging, observed_flow_month, year_start, year_end, T_snow, T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
+  for (st in 1:length(gauging)) {
+    # 1.7.1-load the modeled data per gauging station ####
+    setkey(water_budget, rcn_cell)
+    budget_month <- water_budget[.(input_rcn_gauging$cell_ID[which(input_rcn_gauging$gauging_stat == gauging[st])])]
+    budget_month <- na.omit(budget_month, invert = FALSE)
+    budget_month <- budget_month[, .(
+      VI = mean(VI),
+      t_mean = mean(t_mean),
+      runoff = mean(runoff),
+      pet = mean(pet),
+      aet = mean(aet),
+      gwr = mean(gwr),
+      runoff_2 = mean(runoff_2),
+      delta_reservoir = mean(delta_reservoir)
+    ), .(year, month)]
+    budget_month$gauging_stat <- gauging[st]
+    
+    # 1.7.2-Create the comparison data frame ####
+    cols <- which(colnames(observed_flow_month) %in% c(
+      "year", "month", as.character(unique(budget_month$gauging_stat)),
+      paste(as.character(unique(budget_month$gauging_stat)), "_bf", sep = "")
+    ))
+    comparison_month <- merge(observed_flow_month[, ..cols],
+                              budget_month[, 1:(ncol(budget_month) - 1), with = FALSE],
+                              by = c("year", "month"), all.x = TRUE
+    )
+    rm(cols)
+    colnames(comparison_month)[1:4] <- c("year", "month", "q", "qbase")
+    
+    # 1.7.3-save the simulation results by gauging station ####
+    fwrite(comparison_month, file.path(output_dir, paste0("03_bilan_unspat_month_", gauging[st], ".csv")))
+    
+    # 1.7.4-Objective functions ####
+    # combining the error indicators in a data table
+    error_ind <- matrix(ncol = 2, nrow = 2)
+    colnames(error_ind) <- c("month_cal", "month_val")
+    rownames(error_ind) <- c("KGE_qtot", "KGE_baseflow")
+    # defining the periods of data for the observed river flow and base flow per gauging station and separate it in
+    # first 2/3 = calibration period // last 1/3 = validation period
+    flow_beg <- min(na.contiguous(comparison_month[, 1:3])[, 1])
+    flow_end <- max(na.contiguous(comparison_month[, 1:3])[, 1])
+    ifelse(flow_beg < year_start, flow_beg <- year_start, flow_beg <- as.numeric(flow_beg))
+    ifelse(flow_end > year_end, flow_end <- year_end, flow_end <- as.numeric(flow_end))
+    calibration_start <- flow_beg
+    calibration_end <- flow_beg + round((flow_end - flow_beg) * 2 / 3)
+    validation_start <- calibration_end + 1
+    validation_end <- flow_end
+    # defining the modeled and observed on each period for flow and baseflow
+    m_q_month_cal <- (comparison_month$runoff[which(comparison_month$year %in% c(calibration_start:calibration_end))] +
+      comparison_month$runoff_2[which(comparison_month$year %in% c(calibration_start:calibration_end))] +
+      comparison_month$gwr[which(comparison_month$year %in% c(calibration_start:calibration_end))])
+    o_q_month_cal <- comparison_month[[3]][which(comparison_month$year %in% c(calibration_start:calibration_end))]
+    m_q_month_val <- (comparison_month$runoff[which(comparison_month$year %in% c(validation_start:validation_end))] +
+      comparison_month$runoff_2[which(comparison_month$year %in% c(validation_start:validation_end))] +
+      comparison_month$gwr[which(comparison_month$year %in% c(validation_start:validation_end))])
+    o_q_month_val <- comparison_month[[3]][which(comparison_month$year %in% c(validation_start:validation_end))]
+
+    m_baseflow_month_cal <- comparison_month$gwr[which(comparison_month$year %in% c(calibration_start:calibration_end))]
+    o_baseflow_month_cal <- comparison_month[[4]][which(comparison_month$year %in% c(calibration_start:calibration_end))]
+    m_baseflow_month_val <- comparison_month$gwr[which(comparison_month$year %in% c(validation_start:validation_end))]
+    o_baseflow_month_val <- comparison_month[[4]][which(comparison_month$year %in% c(validation_start:validation_end))]
+    # KGE
+    error_ind[1, 1] <- KGE(m_q_month_cal[which(!is.na(o_q_month_cal))],
+      o_q_month_cal[which(!is.na(o_q_month_cal))],
+      na.rm = TRUE
+    )
+    error_ind[1, 2] <- KGE(m_q_month_val[which(!is.na(o_q_month_val))],
+      o_q_month_val[which(!is.na(o_q_month_val))],
+      na.rm = TRUE
+    )
+
+    error_ind[2, 1] <- KGE(m_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
+      o_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
+      na.rm = TRUE
+    )
+    error_ind[2, 2] <- KGE(m_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
+      o_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
+      na.rm = TRUE
+    )
+    # Clean
+    rm(
+      m_q_month_cal, o_q_month_cal, m_q_month_val, o_q_month_val, m_baseflow_month_cal, o_baseflow_month_cal,
+      m_baseflow_month_val, o_baseflow_month_val
+    )
+
+    # 1.7.5-write the simulation metadata in a datatable and save it ####
+    if (st == 1) {
+      simulation_metadata <- data.table(
+        gauging_stat = unique(budget_month$gauging_stat),
+        cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
+        T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
+        f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
+        KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
+        KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
+        qtot_sim = mean(budget_month[
+          , .(qtot = sum(runoff + runoff_2 + gwr, na.rm = TRUE)),
+          .(year)
+        ][[2]]),
+        aet_sim = mean(budget_month[
+          , .(aet = sum(aet, na.rm = TRUE)),
+          .(year)
+        ][[2]]),
+        gwr_sim = mean(budget_month[
+          , .(gwr = sum(gwr, na.rm = TRUE)),
+          .(year)
+        ][[2]]),
+        time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
+        KGE_mean_cal = NA_real_, KGE_mean_val = NA_real_
+      )
+    } else {
+      simulation_metadata <- rbind(
+        simulation_metadata,
+        data.table(
+          gauging_stat = unique(budget_month$gauging_stat),
+          cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
+          T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
+          f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
+          KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
+          KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
+          qtot_sim = mean(budget_month[
+            , .(qtot = sum(runoff + runoff_2 + gwr, na.rm = TRUE)),
+            .(year)
+          ][[2]]),
+          aet_sim = mean(budget_month[
+            , .(aet = sum(aet, na.rm = TRUE)),
+            .(year)
+          ][[2]]),
+          gwr_sim = mean(budget_month[
+            , .(gwr = sum(gwr, na.rm = TRUE)),
+            .(year)
+          ][[2]]),
+          time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
+          KGE_mean_cal = NA_real_, KGE_mean_val = NA_real_
+        )
+      )
+    }
+    if (st == length(gauging)) {
+      simulation_metadata[nrow(simulation_metadata), c("KGE_mean_cal", "KGE_mean_val") := as.list(c(mean((simulation_metadata$KGE_qtot_cal + simulation_metadata$KGE_qbase_cal) / 2),
+        mean((simulation_metadata$KGE_qtot_val + simulation_metadata$KGE_qbase_val) / 2),
+        na.rm = TRUE
+      ))[1:2]]
+      fwrite(simulation_metadata, file.path(output_dir, "04_simulation_metadata.csv"))
+      rm(simulation_metadata)
+    }
+    rm(calibration_start, calibration_end, validation_start, validation_end, flow_beg, flow_end)
+  }
+  rm(st, comparison_month)
 }
 
 write_rasters <- function(output_dir, water_budget, input_rcn, crs) {
