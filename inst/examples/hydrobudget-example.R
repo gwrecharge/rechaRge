@@ -23,7 +23,7 @@ param <- list(
 ) # infiltration factor (-)
 
 ## 2.4-Simulation period ####
-simul_period <- c(2010, 2010)
+simul_period <- c(2010, 2017)
 
 ## 2.5-Parallel computing option ####
 #nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
