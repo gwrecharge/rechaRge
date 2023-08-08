@@ -7,6 +7,8 @@
 #' @param alpha_lyne_hollick The Lyne and Hollick filter. Input can be a data.frame/data.table or a path to a data file.
 #' @param simul_period The start and end years.
 #'
+#' @importFrom hydroGOF KGE
+#'
 #' @export
 compute_simulation_quality_assessment <- function(calibration, water_budget, input_rcn_gauging, observed_flow, alpha_lyne_hollick, simul_period) {
   param <- calibration

@@ -78,7 +78,9 @@ library(tidyterra)
 library(terra)
 library(ggplot2)
 library(cowplot)
-subtitle <- paste0("From ", simul_period[1], " to ", simul_period[2])
+subtitle <- ifelse(simul_period[1] == simul_period[2],
+                   paste0("In ", simul_period[1]), 
+                   paste0("From ", simul_period[1], " to ", simul_period[2]))
 runoff <- terra::rast(file.path(sim_dir, "05_interannual_runoff_NAD83.tif"))
 runoffplot <- ggplot() +
   geom_spatraster(data = runoff) +

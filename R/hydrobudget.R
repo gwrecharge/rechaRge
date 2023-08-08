@@ -23,9 +23,6 @@
 #' @importFrom lubridate yday year month
 #' @importFrom data.table data.table setkey :=
 #' @importFrom foreach foreach %dopar%
-#' @importFrom hydroGOF KGE
-#' @importFrom raster rasterFromXYZ setMinMax writeRaster
-#' @importFrom sp coordinates
 #' @importFrom zoo rollmean rollsum
 #' @importFrom stats na.contiguous na.omit
 #' @importFrom airGR PE_Oudin
@@ -339,6 +336,8 @@ write_results <- function(water_budget, output_dir = getwd()) {
 #' @param output_dir The output directory where result files will be written. Default is current working directory.
 #'
 #' @importFrom data.table fwrite
+#' @importFrom raster rasterFromXYZ setMinMax writeRaster
+#' @importFrom sp coordinates
 #'
 #' @export
 write_rasters <- function(water_budget, input_rcn, crs, output_dir = getwd()) {
