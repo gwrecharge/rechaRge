@@ -1,5 +1,5 @@
-sim1=simulation_HydroBudget_20230726T10:45
-sim2=simulation_HydroBudget_20230727T17:09
+sim1=output1
+sim2=output2
 
 # basique results comparision between different computations
 diff:

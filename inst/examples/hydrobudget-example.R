@@ -2,17 +2,13 @@
 remotes::install_github("gwrecharge/rechaRge", ref = "dev")
 
 # 2-Load the input data for the simulation and enter the parameters values ####
-## 2.1-Create the folder to save the simulation results ####
-sim_dir <- file.path(getwd(), paste0("simulation_HydroBudget_", format(Sys.time(), "%Y%m%dT%H:%M")))
 
 ## 2.2-Input data ####
 # use input example files provided by the package 
 examples_dir <- file.path(path.package("rechaRge"), "examples")
-input_rcn <- data.table::fread(file.path(examples_dir, "input", "input_rcn.csv.gz"))
-input_climate <- data.table::fread(file.path(examples_dir, "input", "input_climate.csv.gz")) # precipitation total in mm/d
-input_rcn_gauging <- data.table::fread(file.path(examples_dir, "input", "input_rcn_gauging.csv.gz"))
-observed_flow <- data.table::fread(file.path(examples_dir, "input", "observed_flow.csv.gz")) # flow rates in mm/d
-alpha_lyne_hollick <- data.table::fread(file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz"))
+input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
+input_climate <- file.path(examples_dir, "input", "input_climate.csv.gz") # precipitation total in mm/d
+input_rcn_gauging <- file.path(examples_dir, "input", "input_rcn_gauging.csv.gz")
 
 ## 2.3-Calibration parameters ####
 param <- list(
@@ -28,35 +24,55 @@ param <- list(
 
 ## 2.4-Simulation period ####
 simul_period <- c(2010, 2017)
-list_year <- seq(simul_period[1], simul_period[2], 1)
-input_climate <- input_climate[year %in% list_year]
-observed_flow <- observed_flow[year %in% list_year]
 
 ## 2.5-Parallel computing option ####
 #nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
 
-# 3-Process the river flow observations ####
-flow <- rechaRge::process_river_flow(observed_flow, alpha_lyne_hollick)
-
-# 4-Simulation with the HydroBudget model ####
-rechaRge::compute_hydrobudget(
-  param = param,
+# 3-Simulation with the HydroBudget model ####
+water_budget <- rechaRge::compute_hydrobudget(
+  calibration = param,
   input_rcn = input_rcn,
   input_rcn_gauging = input_rcn_gauging,
   input_climate = input_climate,
-  simul_period = simul_period,
-  observed_flow_month = flow$observed_flow_month,
-  gauging = flow$gauging,
-  #nb_core = nb_core,
+  simul_period = simul_period
+  #nb_core = nb_core
+)
+head(water_budget)
+
+
+# 4-Process the river flow observations and assess simulation quality ####
+observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow rates in mm/d
+alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
+
+result <- compute_simulation_quality_assessment(
+  calibration = param, 
+  water_budget = water_budget,
+  input_rcn_gauging = input_rcn_gauging, 
+  observed_flow = observed_flow,
+  alpha_lyne_hollick = alpha_lyne_hollick, 
+  simul_period = simul_period, output_dir = sim_dir)
+
+result$gauging[[1]]$gauging
+head(result$gauging[[1]]$comparison_month)
+result$simulation_metadata
+
+## 5-Save the simulation results ####
+sim_dir <- file.path(getwd(), paste0("simulation_HydroBudget_", format(Sys.time(), "%Y%m%dT%H:%M")))
+
+# 5.1-write output files
+rechaRge::write_results(water_budget, output_dir = sim_dir)
+rechaRge::write_rasters(
+  water_budget = water_budget,
+  input_rcn = input_rcn,
+  crs = "+proj=lcc +lat_1=60 +lat_2=46 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs",
   output_dir = sim_dir
 )
-# list simulation output files
+
+# 5.2-list simulation output files
 list.files(sim_dir)
 
 data.table::fread(file.path(sim_dir, "01_bilan_spat_month.csv"))
 data.table::fread(file.path(sim_dir, "02_bilan_unspat_month.csv"))
-data.table::fread(file.path(sim_dir, "03_bilan_unspat_month_23702.csv"))
-data.table::fread(file.path(sim_dir, "04_simulation_metadata.csv"))
 
 # data viz
 library(tidyterra)

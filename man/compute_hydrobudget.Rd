@@ -5,38 +5,29 @@
 \title{Simulation using HydroBudget model}
 \usage{
 compute_hydrobudget(
-  param,
+  calibration,
   input_rcn,
   input_rcn_gauging,
   input_climate,
   simul_period,
-  observed_flow_month,
-  gauging,
-  nb_core = NULL,
-  output_dir = getwd()
+  nb_core = NULL
 )
 }
 \arguments{
-\item{param}{The calibration parameters.}
+\item{calibration}{The calibration parameters.}
 
-\item{input_rcn}{The RCN values.}
+\item{input_rcn}{The RCN values. Input can be a data.frame/data.table or a path to a data file.}
 
-\item{input_rcn_gauging}{The table with the list of RCN cells located in each gauging station watershed.}
+\item{input_rcn_gauging}{The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.}
 
-\item{input_climate}{The daily total precipitation (mm/d) and average daily temperature (°C).}
+\item{input_climate}{The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.}
 
 \item{simul_period}{The start and end years.}
 
-\item{observed_flow_month}{The observed river flow (mm/month).}
-
-\item{gauging}{The gauging.}
-
 \item{nb_core}{The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.}
-
-\item{output_dir}{The output directory where result files will be written. Default is current working directory.}
 }
 \value{
-The output directory path.
+The water budget
 }
 \description{
 HydroBudget is a spatially distributed GWR model that computes a superficial water budget on
