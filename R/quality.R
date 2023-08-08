@@ -13,8 +13,11 @@ compute_simulation_quality_assessment <- function(calibration, water_budget, inp
   rcn_gauging <- .as.data.table(input_rcn_gauging)
   
   # 1.3-Simulation period ####
-  year_start <- simul_period[1]
-  year_end <- simul_period[2]
+  year_start <- as.numeric(simul_period[1])
+  year_end <- as.numeric(simul_period[2])
+  if (year_end < year_start) {
+    stop("Wrong simulation period, start year must be before end year")
+  }
   
   # load and filter observed flow
   observed_flow_ <- .as.data.table(observed_flow)

@@ -1,6 +1,5 @@
 # HydroBudget function
 
-
 #' Simulation using HydroBudget model
 #'
 #' HydroBudget is a spatially distributed GWR model that computes a superficial water budget on
@@ -54,8 +53,11 @@ compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input
   )
 
   # 1.3-Simulation period ####
-  year_start <- simul_period[1]
-  year_end <- simul_period[2]
+  year_start <- as.numeric(simul_period[1])
+  year_end <- as.numeric(simul_period[2])
+  if (year_end < year_start) {
+    stop("Wrong simulation period, start year must be before end year")
+  }
   # filter climate data for the period
   list_year <- seq(year_start, year_end, 1)
   climate_data <- climate_data[year %in% list_year]

@@ -23,7 +23,7 @@ param <- list(
 ) # infiltration factor (-)
 
 ## 2.4-Simulation period ####
-simul_period <- c(2010, 2017)
+simul_period <- c(2010, 2010)
 
 ## 2.5-Parallel computing option ####
 #nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
@@ -39,7 +39,6 @@ water_budget <- rechaRge::compute_hydrobudget(
 )
 head(water_budget)
 
-
 # 4-Process the river flow observations and assess simulation quality ####
 observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow rates in mm/d
 alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
@@ -50,7 +49,7 @@ result <- compute_simulation_quality_assessment(
   input_rcn_gauging = input_rcn_gauging, 
   observed_flow = observed_flow,
   alpha_lyne_hollick = alpha_lyne_hollick, 
-  simul_period = simul_period, output_dir = sim_dir)
+  simul_period = simul_period)
 
 result$gauging[[1]]$gauging
 head(result$gauging[[1]]$comparison_month)
