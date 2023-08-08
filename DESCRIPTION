@@ -31,6 +31,9 @@ Imports:
     stats,
     sp,
     zoo
+Suggests: 
+    testthat (>= 3.0.0),
+    R.utils
 URL: https://github.com/gwrecharge/rechaRge/,
     https://hess.copernicus.org/articles/25/6567/2021/,
     https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/EUDV3H
@@ -39,3 +42,4 @@ License: CC BY 4.0
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.3
+Config/testthat/edition: 3

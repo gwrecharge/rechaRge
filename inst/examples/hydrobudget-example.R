@@ -5,7 +5,7 @@ remotes::install_github("gwrecharge/rechaRge", ref = "dev")
 
 ## 2.2-Input data ####
 # use input example files provided by the package 
-examples_dir <- file.path(path.package("rechaRge"), "examples")
+examples_dir <- system.file("examples", package="rechaRge")
 input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
 input_climate <- file.path(examples_dir, "input", "input_climate.csv.gz") # precipitation total in mm/d
 input_rcn_gauging <- file.path(examples_dir, "input", "input_rcn_gauging.csv.gz")
@@ -19,8 +19,8 @@ param <- list(
   t_API = 3.9, # Antecedant precipitation index time (d)
   f_runoff = 0.63, # Runoff factor (-)
   sw_m = 431, # Maximum soil water content (mm)
-  f_inf = 0.07
-) # infiltration factor (-)
+  f_inf = 0.07 # infiltration factor (-)
+)
 
 ## 2.4-Simulation period ####
 simul_period <- c(2010, 2017)
