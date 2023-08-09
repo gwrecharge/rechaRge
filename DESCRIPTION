@@ -1,6 +1,6 @@
 Package: rechaRge
 Title: 'HydroBudget' – Groundwater Recharge Model
-Version: 0.1.0
+Version: 0.8.0
 Authors@R: c(
     person("Yannick", "Marcon", , "yannick.marcon@epfl.ch", role = "ctb",
            comment = c(ORCID = "0000-0003-0138-2023")),
