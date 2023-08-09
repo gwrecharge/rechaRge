@@ -2,11 +2,17 @@
 % Please edit documentation in R/hydrobudget.R
 \name{compute_potential_evapotranspiration_cell}
 \alias{compute_potential_evapotranspiration_cell}
-\title{Compute potential evapotranspiration (PET) based on the Oudin formula for a single cell.}
+\title{Compute PET based on the Oudin formula}
 \usage{
-compute_potential_evapotranspiration_cell(cellgrid, input_dd, T_m, C_m, T_snow)
+compute_potential_evapotranspiration_cell(input_dd)
+}
+\arguments{
+\item{input_dd}{Spatially distributed daily precipitation and mean temperature time series in a single cell.}
+}
+\value{
+Spatially distributed daily PET
 }
 \description{
-Compute potential evapotranspiration (PET) based on the Oudin formula for a single cell.
+Compute PET based on the Oudin formula
 }
 \keyword{internal}

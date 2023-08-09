@@ -36,7 +36,6 @@ compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input
   # 1.1-Load the input data ####
   .updateProgress(pb, step = 1, total = 4, tokens = list(what = "Checking input data..."))
   # TODO sanity checks
-  param <- calibration
   rcn <- .as.data.table(input_rcn)
   rcn_gauging <- .as.data.table(input_rcn_gauging)
   climate_data <- .as.data.table(input_climate)
@@ -60,29 +59,31 @@ compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input
   climate_data <- climate_data[year %in% list_year]
 
   # 1.4-Calibration parameters ####
-  # 1.4.1-Snow model
-  T_snow <- 0 # threshold temperature rain/snow (°C)
-  T_m <- param$T_m
-  C_m <- param$C_m
-  # 1.4.2-soil frost
-  TT_F <- param$TT_F
-  F_T <- param$F_T
-  # 1.4.3-runoff
-  t_API <- param$t_API
-  f_runoff <- param$f_runoff
-  # 1.4.4-soil parameters
-  sw_m <- param$sw_m
-  f_inf <- param$f_inf
-  sw_init <- 50
+  calibration_ <- list(
+    # threshold temperature rain/snow (°C)
+    T_snow = 0,
+    T_m = calibration$T_m,
+    C_m = calibration$C_m,
+    # soil frost
+    TT_F = calibration$TT_F,
+    F_T = calibration$F_T,
+    # runoff
+    t_API = calibration$t_API,
+    f_runoff = calibration$f_runoff,
+    # soil parameters
+    sw_m = calibration$sw_m,
+    f_inf = calibration$f_inf,
+    sw_init = 50
+  )
 
   # 1.5-execute the snow model and compute Oudin PET ####
   .updateProgress(pb, step = 2, total = 4, tokens = list(what = "Computing vertical inflow..."))
-  climate_data <- compute_vertical_inflow(climate_data, T_m, C_m, T_snow, nb_core)
+  climate_data <- compute_vertical_inflow(calibration_, climate_data, nb_core)
 
   # 1.6-run HB water budget partitioning ####
   # 1.6.1-Model loop by grid cell in parallel #####
   .updateProgress(pb, step = 3, total = 4, tokens = list(what = "Computing water budget..."))
-  water_budget <- compute_water_budget(climate_data, rcn, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init, nb_core)
+  water_budget <- compute_water_budget(calibration_, climate_data, rcn, nb_core)
   
   # 1.9-Clean ####
   rm(climate_data, rcn_gauging, rcn)
@@ -94,15 +95,20 @@ compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input
 
 #' Determine if precipitation is rain or snow and simulate the snowpack (accumulation
 #' and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).
+#' 
+#' @param calibration The calibration parameters.
+#' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
+#' @param nb_core The number of cores to use in the parallel computations.
+#' 
 #' @keywords internal
-compute_vertical_inflow <- function(climate_data, T_m, C_m, T_snow, nb_core) {
+compute_vertical_inflow <- function(calibration, climate_data, nb_core) {
   # 1.5-execute the snow model and compute Oudin PET ####
   # 1.5.1-Parallel loop ####
   cluster <- .make_cluster(nb_core)
   climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_cell))), .combine = rbind, .inorder = FALSE) %dopar% {
     cellgrid <- as.character(unique(climate_data$climate_cell)[k])
     input_dd <- climate_data[climate_cell == cellgrid]
-    compute_potential_evapotranspiration_cell(cellgrid, input_dd, T_m, C_m, T_snow)
+    compute_vertical_inflow_cell(calibration, input_dd)
   }
   .stop_cluster(cluster)
   rm(cluster)
@@ -112,13 +118,22 @@ compute_vertical_inflow <- function(climate_data, T_m, C_m, T_snow, nb_core) {
   climate_data_VI[, c(1:6, 14, 13)]
 }
 
-#' Compute potential evapotranspiration (PET) based on the Oudin formula for a single cell.
+#' Compute the vertical inflow and the potential evapotranspiration (PET) for a single cell
+#' 
+#' @param calibration The calibration parameters.
+#' @param input_dd Spatially distributed daily precipitation and mean temperature time series in a single cell.
+#' 
 #' @keywords internal
-compute_potential_evapotranspiration_cell <- function(cellgrid, input_dd, T_m, C_m, T_snow) {
+compute_vertical_inflow_cell <- function(calibration, input_dd) {
   # 1.5.1.1-load the packages ####
   requireNamespace("data.table")
   requireNamespace("airGR")
 
+  # calibration parameters
+  T_m <- calibration$T_m
+  C_m <- calibration$C_m
+  T_snow <- calibration$T_snow
+  
   # 1.5.1.2-loop for the snowpack ####
   input_dd$snow <- ifelse(input_dd$t_mean < T_snow, input_dd$p_tot, 0)
   input_dd$rain <- ifelse(input_dd$t_mean > T_snow, input_dd$p_tot, 0)
@@ -143,18 +158,36 @@ compute_potential_evapotranspiration_cell <- function(cellgrid, input_dd, T_m, C
     )
   }
   # 1.5.1.3-compute Oudin PET ####
-  input_dd$PET <- round(PE_Oudin(
+  input_dd$PET <- compute_potential_evapotranspiration_cell(input_dd)
+
+  input_dd
+}
+
+#' Compute PET based on the Oudin formula
+#' 
+#' @param input_dd Spatially distributed daily precipitation and mean temperature time series in a single cell.
+#' @return Spatially distributed daily PET
+#' 
+#' @keywords internal
+compute_potential_evapotranspiration_cell <- function(input_dd) {
+  round(PE_Oudin(
     JD = yday(as.POSIXct(paste(input_dd$year, input_dd$month, input_dd$day, sep = "-"), format = "%Y-%m-%d")),
     Temp = input_dd$t_mean,
     Lat = unique(input_dd$lat),
     # the name of the cells is long-lat binded, so the last 3 numbers are the latitude with 1 digit
     LatUnit = "deg", TimeStepIn = "daily", TimeStepOut = "daily"
   ), 2)
-
-  input_dd
 }
 
-compute_water_budget <- function(climate_data, rcn, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init, nb_core) {
+#' Compute the water budget
+#' 
+#' @param calibration The calibration parameters.
+#' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
+#' @param rcn The RCN values.
+#' @param nb_core The number of cores to use in the parallel computations.
+#' 
+#' @keywords internal
+compute_water_budget <- function(calibration, climate_data, rcn, nb_core) {
   cluster <- .make_cluster(nb_core)
   unique_rcn_cell <- unique(rcn$cell_ID)
   water_budget <- foreach(j = 1:(length(unique_rcn_cell)), .combine = rbind, .inorder = FALSE) %dopar% {
@@ -162,7 +195,7 @@ compute_water_budget <- function(climate_data, rcn, F_T, t_API, f_runoff, TT_F, 
     rcn_subset <- rcn[cell_ID == unique_rcn_cell[j]]
     rcn_climate <- merge(rcn_subset, climate_data, by = "climate_cell", all.x = TRUE)
     rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_cell, rcn_climate$cell_ID, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
-    compute_water_budget_cell(rcn_climate, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init)
+    compute_water_budget_cell(calibration, rcn_climate)
   }
   .stop_cluster(cluster)
   rm(unique_rcn_cell, cluster)
@@ -170,9 +203,24 @@ compute_water_budget <- function(climate_data, rcn, F_T, t_API, f_runoff, TT_F, 
   water_budget
 }
 
-compute_water_budget_cell <- function(rcn_climate, F_T, t_API, f_runoff, TT_F, sw_m, f_inf, sw_init) {
+#' Compute the water budget for a single cell
+#' 
+#' @param calibration The calibration parameters.
+#' @param rcn_climate The RCN values with the climate data (daily total precipitation (mm/d) and average daily temperature (°C)) for a single cell.
+#' 
+#' @keywords internal
+compute_water_budget_cell <- function(calibration, rcn_climate) {
   requireNamespace("data.table")
   requireNamespace("zoo")
+  
+  # calibration parameters
+  F_T <- calibration$F_T
+  t_API <- calibration$t_API
+  f_runoff <- calibration$f_runoff
+  TT_F <- calibration$TT_F
+  sw_m <- calibration$sw_m
+  f_inf <- calibration$f_inf
+  sw_init <- calibration$sw_init
   
   # 1.6.1.2-Mean temperature function of F_T ####
   roll_mean_freez <- as.numeric(rollmean(as.numeric(rcn_climate$t_mean), F_T, fill = NA, na.pad = T, align = "right"))
