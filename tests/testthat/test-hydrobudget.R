@@ -4,15 +4,13 @@ test_that("Water budget computation for a single cell", {
   
   cell_id <- 79402
   input_rcn <- df$input_rcn[cell_ID == cell_id]
-  input_rcn_gauging <- df$input_rcn_gauging[cell_ID == cell_id]
   simul_period <- c(2010, 2010)
   
   wb <- rechaRge::compute_hydrobudget(
     calibration = param,
-    input_rcn = input_rcn,
-    input_rcn_gauging = input_rcn_gauging,
-    input_climate = df$input_climate,
-    simul_period = simul_period,
+    rcn = input_rcn,
+    climate = df$input_climate,
+    period = simul_period,
     nb_core = 1
   )
   

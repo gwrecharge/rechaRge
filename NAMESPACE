@@ -2,7 +2,6 @@
 
 export(compute_hydrobudget)
 export(compute_simulation_quality_assessment)
-export(process_river_flow)
 export(write_rasters)
 export(write_results)
 import(progress)

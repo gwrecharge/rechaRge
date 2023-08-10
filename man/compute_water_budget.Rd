@@ -4,14 +4,14 @@
 \alias{compute_water_budget}
 \title{Compute the water budget}
 \usage{
-compute_water_budget(calibration, climate_data, rcn, nb_core)
+compute_water_budget(calibration, rcn_data, climate_data, nb_core)
 }
 \arguments{
 \item{calibration}{The calibration parameters.}
 
-\item{climate_data}{The daily total precipitation (mm/d) and average daily temperature (°C).}
+\item{rcn_data}{The RCN values.}
 
-\item{rcn}{The RCN values.}
+\item{climate_data}{The daily total precipitation (mm/d) and average daily temperature (°C).}
 
 \item{nb_core}{The number of cores to use in the parallel computations.}
 }

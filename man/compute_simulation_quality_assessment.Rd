@@ -7,25 +7,79 @@
 compute_simulation_quality_assessment(
   calibration,
   water_budget,
-  input_rcn_gauging,
+  rcn_gauging,
   observed_flow,
   alpha_lyne_hollick,
-  simul_period
+  period = NULL
 )
 }
 \arguments{
 \item{calibration}{The calibration parameters.}
 
-\item{water_budget}{The computed water budget.}
+\item{water_budget}{The computed water budget. Input can be a data.frame/data.table or a path to a data file.}
 
-\item{input_rcn_gauging}{The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.}
+\item{rcn_gauging}{The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.}
 
 \item{observed_flow}{The flow rates in mm/day. Input can be a data.frame/data.table or a path to a data file.}
 
 \item{alpha_lyne_hollick}{The Lyne and Hollick filter. Input can be a data.frame/data.table or a path to a data file.}
 
-\item{simul_period}{The start and end years.}
+\item{period}{The start and end years. If not provided, the start/end years will be extracted from the water budget data.}
 }
 \description{
-Simulation quality assessment
+Evaluates the simulated water budget with the average KGE.
+}
+\details{
+The columns of the water budget data set input are:
+\itemize{
+\item \strong{year}
+\item \strong{month}
+\item \strong{VI}
+\item \strong{t_mean}
+\item \strong{runoff}
+\item \strong{pet}
+\item \strong{aet}
+\item \strong{gwr}
+\item \strong{runoff_2}
+\item \strong{delta_reservoir}
+\item \strong{rcn_cell}
+}
+
+The columns of the observed flow data set input are:
+\itemize{
+\item \strong{year}
+\item \strong{month}
+\item \strong{day}
+\item \strong{one column per station} (named by the station ID), the flow rates in mm/day
+}
+
+The columns of the RCN gauging stations data set input are:
+\itemize{
+\item \strong{cell_ID}, the cell ID
+\item \strong{gauging_stat}, the station ID
+}
+
+The columns of the Lyne and Hollick filter data set input are:
+\itemize{
+\item \strong{station}, the station ID
+\item \strong{alpha}
+}
+}
+\examples{
+\dontrun{
+# Use input example files provided by the package
+examples_dir <- system.file("examples", package = "rechaRge")
+observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow rates in mm/d
+alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
+
+# ... compute the water budget ...
+
+result <- compute_simulation_quality_assessment(
+  calibration = param, 
+  water_budget = water_budget,
+  rcn_gauging = input_rcn_gauging, 
+  observed_flow = observed_flow,
+  alpha_lyne_hollick = alpha_lyne_hollick, 
+  period = simul_period)
+}
 }

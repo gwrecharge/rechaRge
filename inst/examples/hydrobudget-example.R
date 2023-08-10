@@ -31,10 +31,9 @@ simul_period <- c(2010, 2017)
 # 3-Simulation with the HydroBudget model ####
 water_budget <- rechaRge::compute_hydrobudget(
   calibration = param,
-  input_rcn = input_rcn,
-  input_rcn_gauging = input_rcn_gauging,
-  input_climate = input_climate,
-  simul_period = simul_period
+  rcn = input_rcn,
+  climate = input_climate,
+  period = simul_period
   #nb_core = nb_core
 )
 head(water_budget)
@@ -46,10 +45,10 @@ alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.g
 result <- compute_simulation_quality_assessment(
   calibration = param, 
   water_budget = water_budget,
-  input_rcn_gauging = input_rcn_gauging, 
+  rcn_gauging = input_rcn_gauging, 
   observed_flow = observed_flow,
   alpha_lyne_hollick = alpha_lyne_hollick, 
-  simul_period = simul_period)
+  period = simul_period)
 
 result$gauging[[1]]$gauging
 head(result$gauging[[1]]$comparison_month)

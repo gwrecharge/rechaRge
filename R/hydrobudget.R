@@ -17,19 +17,15 @@
 #' * **f_runoff**, Runoff factor (-)
 #' * **sw_m**, Maximum soil water content (mm)
 #' * **f_inf**, infiltration factor (-)
-#' 
-#' About the RCN data set, the expected columns are:
+#'
+#' The expected columns for the RCN data set input are:
 #' * **climate_cell**
-#' * **cell_ID**
+#' * **cell_ID**, the cell ID
 #' * **RCNII**
 #' * **X_L93**
 #' * **Y_L93**
-#' 
-#' About the RCN gauging stations data set, the expected columns are: 
-#' * **cell_ID**
-#' * **gauging_stat**
-#' 
-#' About the climate data set, the expected columns are:
+#'
+#' The expected columns for the climate data set input are:
 #' * **climate_cell**
 #' * **day**
 #' * **month**
@@ -37,14 +33,26 @@
 #' * **t_mean**
 #' * **p_tot**
 #' * **lat**
+#' 
+#' The columns of the water budget data set output are:
+#' * **year**
+#' * **month**
+#' * **VI**
+#' * **t_mean**
+#' * **runoff**
+#' * **pet**
+#' * **aet**
+#' * **gwr**
+#' * **runoff_2**
+#' * **delta_reservoir**
+#' * **rcn_cell**
 #'
 #' @param calibration The calibration parameters.
-#' @param input_rcn The RCN values. Input can be a data.frame/data.table or a path to a data file.
-#' @param input_rcn_gauging The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.
-#' @param input_climate The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.
-#' @param simul_period The start and end years.
+#' @param rcn The RCN values. Input can be a data.frame/data.table or a path to a data file.
+#' @param climate The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.
+#' @param period The start and end years. If not provided, the start/end years will be extracted from the climate data.
 #' @param nb_core The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.
-#' 
+#'
 #' @return The water budget
 #' @export
 #'
@@ -60,14 +68,14 @@
 #'
 #' @examples
 #' \dontrun{
-#' # Use input example files provided by the package 
-#' examples_dir <- system.file("examples", package="rechaRge")
+#' # Use input example files provided by the package
+#' examples_dir <- system.file("examples", package = "rechaRge")
 #' input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
-#' input_climate <- file.path(examples_dir, "input", 
-#'   "input_climate.csv.gz") # precipitation total in mm/d
-#' input_rcn_gauging <- file.path(examples_dir, "input", 
-#'   "input_rcn_gauging.csv.gz")
-#' 
+#' input_climate <- file.path(
+#'   examples_dir, "input",
+#'   "input_climate.csv.gz"
+#' ) # precipitation total in mm/d
+#'
 #' # Calibration parameters
 #' param <- list(
 #'   T_m = 2.1, # melting temperature (°C)
@@ -79,53 +87,55 @@
 #'   sw_m = 431, # Maximum soil water content (mm)
 #'   f_inf = 0.07 # infiltration factor (-)
 #' )
-#' 
+#'
 #' # Simulation period
 #' simul_period <- c(2010, 2017)
-#' 
+#'
 #' # Parallel computing option
-#' #nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
-#' 
+#' # nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
+#'
 #' # Simulation with the HydroBudget model
 #' water_budget <- rechaRge::compute_hydrobudget(
 #'   calibration = param,
-#'   input_rcn = input_rcn,
-#'   input_rcn_gauging = input_rcn_gauging,
-#'   input_climate = input_climate,
-#'   simul_period = simul_period
-#'   #nb_core = nb_core
+#'   rcn = input_rcn,
+#'   climate = input_climate,
+#'   period = simul_period
+#'   # nb_core = nb_core
 #' )
 #' head(water_budget)
-#' 
 #' }
-compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input_climate, simul_period, nb_core = NULL) {
+compute_hydrobudget <- function(calibration, rcn, climate, period = NULL, nb_core = NULL) {
   gc()
   pb <- .newProgress(total = 4)
-  
+
   # 1.1-Load the input data ####
   .updateProgress(pb, step = 1, total = 4, tokens = list(what = "Checking input data..."))
   # TODO sanity checks
-  rcn <- .as.data.table(input_rcn)
-  rcn_gauging <- .as.data.table(input_rcn_gauging)
-  climate_data <- .as.data.table(input_climate)
-  simul_period <- simul_period
+  rcn_data <- .as.data.table(rcn)
+  climate_data <- .as.data.table(climate)
+  year_range <- period
   nb_core <- nb_core
 
-  # 1.2-cluster parameters ####
-  ifelse(is.null(nb_core),
-    nb_core <- detectCores() - 1,
-    nb_core <- as.numeric(nb_core)
-  )
-
-  # 1.3-Simulation period ####
-  year_start <- as.numeric(simul_period[1])
-  year_end <- as.numeric(simul_period[2])
+  # 1.2-Simulation period ####
+  if (is.null(year_range)) {
+    year_range <- c(min(climate_data$year), max(climate_data$year))
+  } else if (length(year_range) == 1) {
+    year_range <- append(year_range, max(climate_data$year))
+  }
+  year_start <- as.numeric(year_range[1])
+  year_end <- as.numeric(year_range[2])
   if (year_end < year_start) {
     stop("Wrong simulation period, start year must be before end year")
   }
   # filter climate data for the period
   list_year <- seq(year_start, year_end, 1)
   climate_data <- climate_data[year %in% list_year]
+
+  # 1.3-cluster parameters ####
+  ifelse(is.null(nb_core),
+    nb_core <- detectCores() - 1,
+    nb_core <- as.numeric(nb_core)
+  )
 
   # 1.4-Calibration parameters ####
   calibration_ <- make_calibration_parameters(calibration)
@@ -137,18 +147,18 @@ compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input
   # 1.6-run HB water budget partitioning ####
   # 1.6.1-Model loop by grid cell in parallel #####
   .updateProgress(pb, step = 3, total = 4, tokens = list(what = "Computing water budget..."))
-  water_budget <- compute_water_budget(calibration_, climate_data, rcn, nb_core)
-  
+  water_budget <- compute_water_budget(calibration_, rcn_data, climate_data, nb_core)
+
   # 1.9-Clean ####
-  rm(climate_data, rcn_gauging, rcn)
+  rm(climate_data, rcn_data)
   gc()
   .updateProgress(pb, step = 4, total = 4, tokens = list(what = "Completed"))
-  
+
   water_budget
 }
 
 #' Validate calibration parameters
-#' 
+#'
 #' @keywords internal
 make_calibration_parameters <- function(calibration = list()) {
   # TODO validate parameters (numeric ranges, set default values etc.)
@@ -172,11 +182,11 @@ make_calibration_parameters <- function(calibration = list()) {
 
 #' Determine if precipitation is rain or snow and simulate the snowpack (accumulation
 #' and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).
-#' 
+#'
 #' @param calibration The calibration parameters.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
 #' @param nb_core The number of cores to use in the parallel computations.
-#' 
+#'
 #' @keywords internal
 compute_vertical_inflow <- function(calibration, climate_data, nb_core) {
   # 1.5-execute the snow model and compute Oudin PET ####
@@ -196,10 +206,10 @@ compute_vertical_inflow <- function(calibration, climate_data, nb_core) {
 }
 
 #' Compute the vertical inflow and the potential evapotranspiration (PET) for a single cell
-#' 
+#'
 #' @param calibration The calibration parameters.
 #' @param input_dd Spatially distributed daily precipitation and mean temperature time series in a single cell.
-#' 
+#'
 #' @keywords internal
 compute_vertical_inflow_cell <- function(calibration, input_dd) {
   # 1.5.1.1-load the packages ####
@@ -210,7 +220,7 @@ compute_vertical_inflow_cell <- function(calibration, input_dd) {
   T_m <- calibration$T_m
   C_m <- calibration$C_m
   T_snow <- calibration$T_snow
-  
+
   # 1.5.1.2-loop for the snowpack ####
   input_dd$snow <- ifelse(input_dd$t_mean < T_snow, input_dd$p_tot, 0)
   input_dd$rain <- ifelse(input_dd$t_mean > T_snow, input_dd$p_tot, 0)
@@ -241,10 +251,10 @@ compute_vertical_inflow_cell <- function(calibration, input_dd) {
 }
 
 #' Compute PET based on the Oudin formula
-#' 
+#'
 #' @param input_dd Spatially distributed daily precipitation and mean temperature time series in a single cell.
 #' @return Spatially distributed daily PET
-#' 
+#'
 #' @keywords internal
 compute_potential_evapotranspiration_cell <- function(input_dd) {
   round(PE_Oudin(
@@ -257,19 +267,19 @@ compute_potential_evapotranspiration_cell <- function(input_dd) {
 }
 
 #' Compute the water budget
-#' 
+#'
 #' @param calibration The calibration parameters.
+#' @param rcn_data The RCN values.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
-#' @param rcn The RCN values.
 #' @param nb_core The number of cores to use in the parallel computations.
-#' 
+#'
 #' @keywords internal
-compute_water_budget <- function(calibration, climate_data, rcn, nb_core) {
+compute_water_budget <- function(calibration, rcn_data, climate_data, nb_core) {
   cluster <- .make_cluster(nb_core)
-  unique_rcn_cell <- unique(rcn$cell_ID)
+  unique_rcn_cell <- unique(rcn_data$cell_ID)
   water_budget <- foreach(j = 1:(length(unique_rcn_cell)), .combine = rbind, .inorder = FALSE) %dopar% {
     # 1.6.1.1-subsets ####
-    rcn_subset <- rcn[cell_ID == unique_rcn_cell[j]]
+    rcn_subset <- rcn_data[cell_ID == unique_rcn_cell[j]]
     rcn_climate <- merge(rcn_subset, climate_data, by = "climate_cell", all.x = TRUE)
     rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_cell, rcn_climate$cell_ID, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
     compute_water_budget_cell(calibration, rcn_climate)
@@ -281,15 +291,15 @@ compute_water_budget <- function(calibration, climate_data, rcn, nb_core) {
 }
 
 #' Compute the water budget for a single cell
-#' 
+#'
 #' @param calibration The calibration parameters.
 #' @param rcn_climate The RCN values with the climate data (daily total precipitation (mm/d) and average daily temperature (°C)) for a single cell.
-#' 
+#'
 #' @keywords internal
 compute_water_budget_cell <- function(calibration, rcn_climate) {
   requireNamespace("data.table")
   requireNamespace("zoo")
-  
+
   # calibration parameters
   F_T <- calibration$F_T
   t_API <- calibration$t_API
@@ -298,7 +308,7 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
   sw_m <- calibration$sw_m
   f_inf <- calibration$f_inf
   sw_init <- calibration$sw_init
-  
+
   # 1.6.1.2-Mean temperature function of F_T ####
   roll_mean_freez <- as.numeric(rollmean(as.numeric(rcn_climate$t_mean), F_T, fill = NA, na.pad = T, align = "right"))
   rcn_climate$temp_freez <- ifelse(is.na(roll_mean_freez), rcn_climate$t_mean, roll_mean_freez)
@@ -421,20 +431,20 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
 }
 
 #' Write result as data files
-#' 
+#'
 #' Export water budget.
-#' 
+#'
 #' @param water_budget The computed water budget.
 #' @param output_dir The output directory where result files will be written. Default is current working directory.
-#' 
+#'
 #' @importFrom data.table fwrite
-#' 
+#'
 #' @export
 write_results <- function(water_budget, output_dir = getwd()) {
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
-  
+
   fwrite(water_budget, file.path(output_dir, "01_bilan_spat_month.csv"))
   budget_unspat <- water_budget[, .(
     VI = mean(VI),
@@ -452,9 +462,9 @@ write_results <- function(water_budget, output_dir = getwd()) {
 }
 
 #' Write result as raster files
-#' 
+#'
 #' Export raster for interannual runoff, aet and GWR.
-#' 
+#'
 #' @param water_budget The computed water budget. Input can be a data.frame/data.table or a path to a data file.
 #' @param input_rcn The RCN values. Input can be a data.frame/data.table or a path to a data file.
 #' @param crs The coordinate reference systems.
@@ -469,11 +479,11 @@ write_rasters <- function(water_budget, input_rcn, crs, output_dir = getwd()) {
   if (!dir.exists(output_dir)) {
     dir.create(output_dir, recursive = TRUE)
   }
-  
+
   wb <- .as.data.table(water_budget)
-  
+
   rcn <- .as.data.table(input_rcn)
-  
+
   budget_month_spat <- wb[
     , .(runoff = sum(runoff + runoff_2, na.rm = TRUE), aet = sum(aet, na.rm = TRUE), gwr = sum(gwr, na.rm = TRUE)),
     .(rcn_cell, year)
@@ -484,21 +494,21 @@ write_rasters <- function(water_budget, input_rcn, crs, output_dir = getwd()) {
   runoff <- x_interannual[, .(x = X_L93, y = Y_L93, z = runoff)]
   aet <- x_interannual[, .(x = X_L93, y = Y_L93, z = aet)]
   gwr <- x_interannual[, .(x = X_L93, y = Y_L93, z = gwr)]
-  
+
   sp::coordinates(runoff) <- ~ x + y
   runoff <- rasterFromXYZ(runoff, crs = crs)
   runoff <- setMinMax(runoff)
   writeRaster(runoff, filename = file.path(output_dir, "05_interannual_runoff_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
-  
+
   sp::coordinates(aet) <- ~ x + y
   aet <- rasterFromXYZ(aet, crs = crs)
   aet <- setMinMax(aet)
   writeRaster(aet, filename = file.path(output_dir, "06_interannual_aet_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
-  
+
   sp::coordinates(gwr) <- ~ x + y
   gwr <- rasterFromXYZ(gwr, crs = crs)
   gwr <- setMinMax(gwr)
   writeRaster(gwr, filename = file.path(output_dir, "07_interannual_gwr_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
 
-  rm(aet, budget_month_spat, gwr, x_interannual)  
+  rm(aet, budget_month_spat, gwr, x_interannual)
 }

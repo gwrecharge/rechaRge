@@ -4,25 +4,16 @@
 \alias{compute_hydrobudget}
 \title{Simulation using HydroBudget model}
 \usage{
-compute_hydrobudget(
-  calibration,
-  input_rcn,
-  input_rcn_gauging,
-  input_climate,
-  simul_period,
-  nb_core = NULL
-)
+compute_hydrobudget(calibration, rcn, climate, period = NULL, nb_core = NULL)
 }
 \arguments{
 \item{calibration}{The calibration parameters.}
 
-\item{input_rcn}{The RCN values. Input can be a data.frame/data.table or a path to a data file.}
+\item{rcn}{The RCN values. Input can be a data.frame/data.table or a path to a data file.}
 
-\item{input_rcn_gauging}{The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.}
+\item{climate}{The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.}
 
-\item{input_climate}{The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.}
-
-\item{simul_period}{The start and end years.}
+\item{period}{The start and end years. If not provided, the start/end years will be extracted from the climate data.}
 
 \item{nb_core}{The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.}
 }
@@ -49,22 +40,16 @@ About the calibration parameters:
 \item \strong{f_inf}, infiltration factor (-)
 }
 
-About the RCN data set, the expected columns are:
+The expected columns for the RCN data set input are:
 \itemize{
 \item \strong{climate_cell}
-\item \strong{cell_ID}
+\item \strong{cell_ID}, the cell ID
 \item \strong{RCNII}
 \item \strong{X_L93}
 \item \strong{Y_L93}
 }
 
-About the RCN gauging stations data set, the expected columns are:
-\itemize{
-\item \strong{cell_ID}
-\item \strong{gauging_stat}
-}
-
-About the climate data set, the expected columns are:
+The expected columns for the climate data set input are:
 \itemize{
 \item \strong{climate_cell}
 \item \strong{day}
@@ -74,16 +59,31 @@ About the climate data set, the expected columns are:
 \item \strong{p_tot}
 \item \strong{lat}
 }
+
+The columns of the water budget data set output are:
+\itemize{
+\item \strong{year}
+\item \strong{month}
+\item \strong{VI}
+\item \strong{t_mean}
+\item \strong{runoff}
+\item \strong{pet}
+\item \strong{aet}
+\item \strong{gwr}
+\item \strong{runoff_2}
+\item \strong{delta_reservoir}
+\item \strong{rcn_cell}
+}
 }
 \examples{
 \dontrun{
-# Use input example files provided by the package 
-examples_dir <- system.file("examples", package="rechaRge")
+# Use input example files provided by the package
+examples_dir <- system.file("examples", package = "rechaRge")
 input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
-input_climate <- file.path(examples_dir, "input", 
-  "input_climate.csv.gz") # precipitation total in mm/d
-input_rcn_gauging <- file.path(examples_dir, "input", 
-  "input_rcn_gauging.csv.gz")
+input_climate <- file.path(
+  examples_dir, "input",
+  "input_climate.csv.gz"
+) # precipitation total in mm/d
 
 # Calibration parameters
 param <- list(
@@ -101,18 +101,16 @@ param <- list(
 simul_period <- c(2010, 2017)
 
 # Parallel computing option
-#nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
+# nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
 
 # Simulation with the HydroBudget model
 water_budget <- rechaRge::compute_hydrobudget(
   calibration = param,
-  input_rcn = input_rcn,
-  input_rcn_gauging = input_rcn_gauging,
-  input_climate = input_climate,
-  simul_period = simul_period
-  #nb_core = nb_core
+  rcn = input_rcn,
+  climate = input_climate,
+  period = simul_period
+  # nb_core = nb_core
 )
 head(water_budget)
-
 }
 }
