@@ -8,6 +8,36 @@
 #' transfer from a cell to another (no water routing). The model inputs are distributed daily
 #' precipitation and temperature as well as distributed data of pedology, land cover, and slope.
 #'
+#' About the calibration parameters:
+#' * **T_m**, melting temperature (°C)
+#' * **C_m**, melting coefficient (mm/°C/d)
+#' * **TT_F**, Threshold temperature for soil frost (°C)
+#' * **F_T**, Freezing time (d)
+#' * **t_API**, Antecedent precipitation index time (d)
+#' * **f_runoff**, Runoff factor (-)
+#' * **sw_m**, Maximum soil water content (mm)
+#' * **f_inf**, infiltration factor (-)
+#' 
+#' About the RCN data set, the expected columns are:
+#' * **climate_cell**
+#' * **cell_ID**
+#' * **RCNII**
+#' * **X_L93**
+#' * **Y_L93**
+#' 
+#' About the RCN gauging stations data set, the expected columns are: 
+#' * **cell_ID**
+#' * **gauging_stat**
+#' 
+#' About the climate data set, the expected columns are:
+#' * **climate_cell**
+#' * **day**
+#' * **month**
+#' * **year**
+#' * **t_mean**
+#' * **p_tot**
+#' * **lat**
+#'
 #' @param calibration The calibration parameters.
 #' @param input_rcn The RCN values. Input can be a data.frame/data.table or a path to a data file.
 #' @param input_rcn_gauging The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.
@@ -29,6 +59,45 @@
 #' @importFrom plyr .
 #'
 #' @examples
+#' \dontrun{
+#' # Use input example files provided by the package 
+#' examples_dir <- system.file("examples", package="rechaRge")
+#' input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
+#' input_climate <- file.path(examples_dir, "input", 
+#'   "input_climate.csv.gz") # precipitation total in mm/d
+#' input_rcn_gauging <- file.path(examples_dir, "input", 
+#'   "input_rcn_gauging.csv.gz")
+#' 
+#' # Calibration parameters
+#' param <- list(
+#'   T_m = 2.1, # melting temperature (°C)
+#'   C_m = 6.2, # melting coefficient (mm/°C/d)
+#'   TT_F = -17.6, # Threshold temperature for soil frost (°C)
+#'   F_T = 16.4, # Freezing time (d)
+#'   t_API = 3.9, # Antecedent precipitation index time (d)
+#'   f_runoff = 0.63, # Runoff factor (-)
+#'   sw_m = 431, # Maximum soil water content (mm)
+#'   f_inf = 0.07 # infiltration factor (-)
+#' )
+#' 
+#' # Simulation period
+#' simul_period <- c(2010, 2017)
+#' 
+#' # Parallel computing option
+#' #nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
+#' 
+#' # Simulation with the HydroBudget model
+#' water_budget <- rechaRge::compute_hydrobudget(
+#'   calibration = param,
+#'   input_rcn = input_rcn,
+#'   input_rcn_gauging = input_rcn_gauging,
+#'   input_climate = input_climate,
+#'   simul_period = simul_period
+#'   #nb_core = nb_core
+#' )
+#' head(water_budget)
+#' 
+#' }
 compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input_climate, simul_period, nb_core = NULL) {
   gc()
   pb <- .newProgress(total = 4)

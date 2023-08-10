@@ -36,3 +36,83 @@ GWR are simulated for each grid cell, with a monthly time step, and fluxes do no
 transfer from a cell to another (no water routing). The model inputs are distributed daily
 precipitation and temperature as well as distributed data of pedology, land cover, and slope.
 }
+\details{
+About the calibration parameters:
+\itemize{
+\item \strong{T_m}, melting temperature (°C)
+\item \strong{C_m}, melting coefficient (mm/°C/d)
+\item \strong{TT_F}, Threshold temperature for soil frost (°C)
+\item \strong{F_T}, Freezing time (d)
+\item \strong{t_API}, Antecedent precipitation index time (d)
+\item \strong{f_runoff}, Runoff factor (-)
+\item \strong{sw_m}, Maximum soil water content (mm)
+\item \strong{f_inf}, infiltration factor (-)
+}
+
+About the RCN data set, the expected columns are:
+\itemize{
+\item \strong{climate_cell}
+\item \strong{cell_ID}
+\item \strong{RCNII}
+\item \strong{X_L93}
+\item \strong{Y_L93}
+}
+
+About the RCN gauging stations data set, the expected columns are:
+\itemize{
+\item \strong{cell_ID}
+\item \strong{gauging_stat}
+}
+
+About the climate data set, the expected columns are:
+\itemize{
+\item \strong{climate_cell}
+\item \strong{day}
+\item \strong{month}
+\item \strong{year}
+\item \strong{t_mean}
+\item \strong{p_tot}
+\item \strong{lat}
+}
+}
+\examples{
+\dontrun{
+# Use input example files provided by the package 
+examples_dir <- system.file("examples", package="rechaRge")
+input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
+input_climate <- file.path(examples_dir, "input", 
+  "input_climate.csv.gz") # precipitation total in mm/d
+input_rcn_gauging <- file.path(examples_dir, "input", 
+  "input_rcn_gauging.csv.gz")
+
+# Calibration parameters
+param <- list(
+  T_m = 2.1, # melting temperature (°C)
+  C_m = 6.2, # melting coefficient (mm/°C/d)
+  TT_F = -17.6, # Threshold temperature for soil frost (°C)
+  F_T = 16.4, # Freezing time (d)
+  t_API = 3.9, # Antecedent precipitation index time (d)
+  f_runoff = 0.63, # Runoff factor (-)
+  sw_m = 431, # Maximum soil water content (mm)
+  f_inf = 0.07 # infiltration factor (-)
+)
+
+# Simulation period
+simul_period <- c(2010, 2017)
+
+# Parallel computing option
+#nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
+
+# Simulation with the HydroBudget model
+water_budget <- rechaRge::compute_hydrobudget(
+  calibration = param,
+  input_rcn = input_rcn,
+  input_rcn_gauging = input_rcn_gauging,
+  input_climate = input_climate,
+  simul_period = simul_period
+  #nb_core = nb_core
+)
+head(water_budget)
+
+}
+}
