@@ -59,22 +59,7 @@ compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input
   climate_data <- climate_data[year %in% list_year]
 
   # 1.4-Calibration parameters ####
-  calibration_ <- list(
-    # threshold temperature rain/snow (°C)
-    T_snow = 0,
-    T_m = calibration$T_m,
-    C_m = calibration$C_m,
-    # soil frost
-    TT_F = calibration$TT_F,
-    F_T = calibration$F_T,
-    # runoff
-    t_API = calibration$t_API,
-    f_runoff = calibration$f_runoff,
-    # soil parameters
-    sw_m = calibration$sw_m,
-    f_inf = calibration$f_inf,
-    sw_init = 50
-  )
+  calibration_ <- make_calibration_parameters(calibration)
 
   # 1.5-execute the snow model and compute Oudin PET ####
   .updateProgress(pb, step = 2, total = 4, tokens = list(what = "Computing vertical inflow..."))
@@ -91,6 +76,29 @@ compute_hydrobudget <- function(calibration, input_rcn, input_rcn_gauging, input
   .updateProgress(pb, step = 4, total = 4, tokens = list(what = "Completed"))
   
   water_budget
+}
+
+#' Validate calibration parameters
+#' 
+#' @keywords internal
+make_calibration_parameters <- function(calibration = list()) {
+  # TODO validate parameters (numeric ranges, set default values etc.)
+  list(
+    # threshold temperature rain/snow (°C)
+    T_snow = 0,
+    T_m = calibration$T_m,
+    C_m = calibration$C_m,
+    # soil frost
+    TT_F = calibration$TT_F,
+    F_T = calibration$F_T,
+    # runoff
+    t_API = calibration$t_API,
+    f_runoff = calibration$f_runoff,
+    # soil parameters
+    sw_m = calibration$sw_m,
+    f_inf = calibration$f_inf,
+    sw_init = 50
+  )
 }
 
 #' Determine if precipitation is rain or snow and simulate the snowpack (accumulation
