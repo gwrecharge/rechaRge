@@ -11,7 +11,7 @@ input_climate <- file.path(examples_dir, "input", "input_climate.csv.gz") # prec
 input_rcn_gauging <- file.path(examples_dir, "input", "input_rcn_gauging.csv.gz")
 
 ## 2.3-Calibration parameters ####
-param <- list(
+HB <- rechaRge::new_hydrobugdet(
   T_m = 2.1, # melting temperature (°C)
   C_m = 6.2, # melting coefficient (mm/°C/d)
   TT_F = -17.6, # Threshold temperature for soil frost (°C)
@@ -30,7 +30,7 @@ simul_period <- c(2010, 2017)
 
 # 3-Simulation with the HydroBudget model ####
 water_budget <- rechaRge::compute_hydrobudget(
-  calibration = param,
+  HB,
   rcn = input_rcn,
   climate = input_climate,
   period = simul_period

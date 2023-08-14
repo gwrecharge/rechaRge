@@ -1,4 +1,42 @@
-# HydroBudget function
+# HydroBudget model
+
+#' HydroBudget object
+#' 
+#' Make a new HydroBudget object, by providing the calibration parameters for the 
+#' model computation.
+#'
+#' @param T_m The melting temperature (°C)
+#' @param C_m The melting coefficient (mm/°C/d)
+#' @param TT_F The Threshold temperature for soil frost (°C)
+#' @param F_T The freezing time (d)
+#' @param t_API The antecedent precipitation index time (d)
+#' @param f_runoff The runoff factor (-)
+#' @param sw_m The maximum soil water content (mm)
+#' @param f_inf The infiltration factor (-)
+#'
+#' @return
+#' @export
+new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
+  # TODO some sanity checks with the calibration values
+  structure(list(
+    calibration = list(
+      # threshold temperature rain/snow (°C)
+      T_snow = 0,
+      T_m = T_m,
+      C_m = C_m,
+      # soil frost
+      TT_F = TT_F,
+      F_T = F_T,
+      # runoff
+      t_API = t_API,
+      f_runoff = f_runoff,
+      # soil parameters
+      sw_m = sw_m,
+      f_inf = f_inf,
+      sw_init = 50
+    )
+  ), class="hydrobudget")
+}
 
 #' Simulation using HydroBudget model
 #'
@@ -8,52 +46,8 @@
 #' transfer from a cell to another (no water routing). The model inputs are distributed daily
 #' precipitation and temperature as well as distributed data of pedology, land cover, and slope.
 #'
-#' About the calibration parameters:
-#' * **T_m**, melting temperature (°C)
-#' * **C_m**, melting coefficient (mm/°C/d)
-#' * **TT_F**, Threshold temperature for soil frost (°C)
-#' * **F_T**, Freezing time (d)
-#' * **t_API**, Antecedent precipitation index time (d)
-#' * **f_runoff**, Runoff factor (-)
-#' * **sw_m**, Maximum soil water content (mm)
-#' * **f_inf**, infiltration factor (-)
-#'
-#' The expected columns for the RCN data set input are:
-#' * **climate_cell**
-#' * **cell_ID**, the cell ID
-#' * **RCNII**
-#' * **X_L93**
-#' * **Y_L93**
-#'
-#' The expected columns for the climate data set input are:
-#' * **climate_cell**
-#' * **day**
-#' * **month**
-#' * **year**
-#' * **t_mean**
-#' * **p_tot**
-#' * **lat**
-#' 
-#' The columns of the water budget data set output are:
-#' * **year**
-#' * **month**
-#' * **VI**
-#' * **t_mean**
-#' * **runoff**
-#' * **pet**
-#' * **aet**
-#' * **gwr**
-#' * **runoff_2**
-#' * **delta_reservoir**
-#' * **rcn_cell**
-#'
-#' @param calibration The calibration parameters.
-#' @param rcn The RCN values. Input can be a data.frame/data.table or a path to a data file.
-#' @param climate The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.
-#' @param period The start and end years. If not provided, the start/end years will be extracted from the climate data.
-#' @param nb_core The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.
-#'
-#' @return The water budget
+#' @rdname compute_recharge
+#' @method compute_recharge hydrobudget
 #' @export
 #'
 #' @importFrom parallel detectCores makeCluster stopCluster
@@ -65,7 +59,7 @@
 #' @importFrom stats na.contiguous na.omit
 #' @importFrom airGR PE_Oudin
 #' @importFrom plyr .
-#'
+#' 
 #' @examples
 #' \dontrun{
 #' # Use input example files provided by the package
@@ -77,7 +71,7 @@
 #' ) # precipitation total in mm/d
 #'
 #' # Calibration parameters
-#' param <- list(
+#' HB <- rechaRge::new_hydrobudget(
 #'   T_m = 2.1, # melting temperature (°C)
 #'   C_m = 6.2, # melting coefficient (mm/°C/d)
 #'   TT_F = -17.6, # Threshold temperature for soil frost (°C)
@@ -95,8 +89,8 @@
 #' # nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
 #'
 #' # Simulation with the HydroBudget model
-#' water_budget <- rechaRge::compute_hydrobudget(
-#'   calibration = param,
+#' water_budget <- rechaRge::compute_recharge(
+#'   HB,
 #'   rcn = input_rcn,
 #'   climate = input_climate,
 #'   period = simul_period
@@ -104,7 +98,7 @@
 #' )
 #' head(water_budget)
 #' }
-compute_hydrobudget <- function(calibration, rcn, climate, period = NULL, nb_core = NULL) {
+compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_core = NULL) {
   gc()
   pb <- .newProgress(total = 4)
 
@@ -138,7 +132,7 @@ compute_hydrobudget <- function(calibration, rcn, climate, period = NULL, nb_cor
   )
 
   # 1.4-Calibration parameters ####
-  calibration_ <- make_calibration_parameters(calibration)
+  calibration_ <- obj$calibration
 
   # 1.5-execute the snow model and compute Oudin PET ####
   .updateProgress(pb, step = 2, total = 4, tokens = list(what = "Computing vertical inflow..."))
@@ -155,29 +149,6 @@ compute_hydrobudget <- function(calibration, rcn, climate, period = NULL, nb_cor
   .updateProgress(pb, step = 4, total = 4, tokens = list(what = "Completed"))
 
   water_budget
-}
-
-#' Validate calibration parameters
-#'
-#' @keywords internal
-make_calibration_parameters <- function(calibration = list()) {
-  # TODO validate parameters (numeric ranges, set default values etc.)
-  list(
-    # threshold temperature rain/snow (°C)
-    T_snow = 0,
-    T_m = calibration$T_m,
-    C_m = calibration$C_m,
-    # soil frost
-    TT_F = calibration$TT_F,
-    F_T = calibration$F_T,
-    # runoff
-    t_API = calibration$t_API,
-    f_runoff = calibration$f_runoff,
-    # soil parameters
-    sw_m = calibration$sw_m,
-    f_inf = calibration$f_inf,
-    sw_init = 50
-  )
 }
 
 #' Determine if precipitation is rain or snow and simulate the snowpack (accumulation
@@ -428,87 +399,4 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
   w_b[, (names(w_b)[3:ncol(w_b)]) := round(.SD, 1), .SDcols = names(w_b)[3:ncol(w_b)]]
   w_b[, rcn_cell := rcn_climate$cell_ID[1]]
   w_b
-}
-
-#' Write result as data files
-#'
-#' Export water budget.
-#'
-#' @param water_budget The computed water budget.
-#' @param output_dir The output directory where result files will be written. Default is current working directory.
-#'
-#' @importFrom data.table fwrite
-#'
-#' @export
-write_results <- function(water_budget, output_dir = getwd()) {
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  fwrite(water_budget, file.path(output_dir, "01_bilan_spat_month.csv"))
-  budget_unspat <- water_budget[, .(
-    VI = mean(VI),
-    t_mean = mean(t_mean),
-    runoff = mean(runoff),
-    pet = mean(pet),
-    aet = mean(aet),
-    gwr = mean(gwr),
-    runoff_2 = mean(runoff_2),
-    delta_reservoir = mean(delta_reservoir)
-  ), .(year, month)]
-  budget_unspat[, (names(budget_unspat)[3:ncol(budget_unspat)]) := round(.SD, 1), .SDcols = names(budget_unspat)[3:ncol(budget_unspat)]]
-  fwrite(budget_unspat, file.path(output_dir, "02_bilan_unspat_month.csv"))
-  rm(budget_unspat)
-}
-
-#' Write result as raster files
-#'
-#' Export raster for interannual runoff, aet and GWR.
-#'
-#' @param water_budget The computed water budget. Input can be a data.frame/data.table or a path to a data file.
-#' @param input_rcn The RCN values. Input can be a data.frame/data.table or a path to a data file.
-#' @param crs The coordinate reference systems.
-#' @param output_dir The output directory where result files will be written. Default is current working directory.
-#'
-#' @importFrom data.table fwrite
-#' @importFrom raster rasterFromXYZ setMinMax writeRaster
-#' @importFrom sp coordinates
-#'
-#' @export
-write_rasters <- function(water_budget, input_rcn, crs, output_dir = getwd()) {
-  if (!dir.exists(output_dir)) {
-    dir.create(output_dir, recursive = TRUE)
-  }
-
-  wb <- .as.data.table(water_budget)
-
-  rcn <- .as.data.table(input_rcn)
-
-  budget_month_spat <- wb[
-    , .(runoff = sum(runoff + runoff_2, na.rm = TRUE), aet = sum(aet, na.rm = TRUE), gwr = sum(gwr, na.rm = TRUE)),
-    .(rcn_cell, year)
-  ]
-  budget_month_spat <- budget_month_spat[, .(runoff = mean(runoff), aet = mean(aet), gwr = mean(gwr)), .(rcn_cell)]
-  rcn <- rcn[which(!duplicated(rcn$cell_ID)), ]
-  x_interannual <- merge(budget_month_spat, rcn[, c(2, 4, 5)], by.x = "rcn_cell", by.y = "cell_ID")
-  runoff <- x_interannual[, .(x = X_L93, y = Y_L93, z = runoff)]
-  aet <- x_interannual[, .(x = X_L93, y = Y_L93, z = aet)]
-  gwr <- x_interannual[, .(x = X_L93, y = Y_L93, z = gwr)]
-
-  sp::coordinates(runoff) <- ~ x + y
-  runoff <- rasterFromXYZ(runoff, crs = crs)
-  runoff <- setMinMax(runoff)
-  writeRaster(runoff, filename = file.path(output_dir, "05_interannual_runoff_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
-
-  sp::coordinates(aet) <- ~ x + y
-  aet <- rasterFromXYZ(aet, crs = crs)
-  aet <- setMinMax(aet)
-  writeRaster(aet, filename = file.path(output_dir, "06_interannual_aet_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
-
-  sp::coordinates(gwr) <- ~ x + y
-  gwr <- rasterFromXYZ(gwr, crs = crs)
-  gwr <- setMinMax(gwr)
-  writeRaster(gwr, filename = file.path(output_dir, "07_interannual_gwr_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
-
-  rm(aet, budget_month_spat, gwr, x_interannual)
 }

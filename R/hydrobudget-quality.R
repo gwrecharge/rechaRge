@@ -29,7 +29,7 @@
 #' * **station**, the station ID
 #' * **alpha**
 #' 
-#' @param calibration The calibration parameters.
+#' @param obj The HydroBudget object with calibration parameters.
 #' @param water_budget The computed water budget. Input can be a data.frame/data.table or a path to a data file.
 #' @param rcn_gauging The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.
 #' @param observed_flow The flow rates in mm/day. Input can be a data.frame/data.table or a path to a data file.
@@ -57,12 +57,10 @@
 #'   alpha_lyne_hollick = alpha_lyne_hollick, 
 #'   period = simul_period)
 #' }
-compute_simulation_quality_assessment <- function(calibration, water_budget, rcn_gauging, observed_flow, alpha_lyne_hollick, period = NULL) {
-  param <- calibration
+compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging, observed_flow, alpha_lyne_hollick, period = NULL) {
   water_budget_data <- .as.data.table(water_budget)
   rcn_gauging_data <- .as.data.table(rcn_gauging)
   year_range <- period
-  
   
   # 1.3-Simulation period ####
   if (is.null(year_range)) {
@@ -86,7 +84,7 @@ compute_simulation_quality_assessment <- function(calibration, water_budget, rcn
   
   # 1.4-Calibration parameters ####
   # 1.4.1-Snow model
-  calibration_ <- make_calibration_parameters(calibration)
+  calibration_ <- obj$calibration
   T_snow <- calibration_$Tsnow
   T_m <- calibration_$T_m
   C_m <- calibration_$C_m
