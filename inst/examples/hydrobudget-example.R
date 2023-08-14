@@ -29,7 +29,7 @@ simul_period <- c(2010, 2017)
 #nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
 
 # 3-Simulation with the HydroBudget model ####
-water_budget <- rechaRge::compute_hydrobudget(
+water_budget <- rechaRge::compute_recharge(
   HB,
   rcn = input_rcn,
   climate = input_climate,
@@ -42,8 +42,8 @@ head(water_budget)
 observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow rates in mm/d
 alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
 
-result <- compute_simulation_quality_assessment(
-  calibration = param, 
+result <- rechaRge::compute_simulation_quality_assessment(
+  HB, 
   water_budget = water_budget,
   rcn_gauging = input_rcn_gauging, 
   observed_flow = observed_flow,

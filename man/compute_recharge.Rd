@@ -6,11 +6,11 @@
 \alias{compute_recharge.hydrobudget}
 \title{Simulation using a recharge model}
 \usage{
-compute_recharge(obj, rcn, climate, period = NULL, nb_core = NULL)
+compute_recharge(obj, rcn, climate, period = NULL, nb_core = NULL, ...)
 
-\method{compute_recharge}{default}(obj, rcn, climate, period = NULL, nb_core = NULL)
+\method{compute_recharge}{default}(obj, rcn, climate, period = NULL, nb_core = NULL, ...)
 
-\method{compute_recharge}{hydrobudget}(obj, rcn, climate, period = NULL, nb_core = NULL)
+\method{compute_recharge}{hydrobudget}(obj, rcn, climate, period = NULL, nb_core = NULL, ...)
 }
 \arguments{
 \item{obj}{The recharge object.}
@@ -22,6 +22,8 @@ compute_recharge(obj, rcn, climate, period = NULL, nb_core = NULL)
 \item{period}{The start and end years. If not provided, the start/end years will be extracted from the climate data.}
 
 \item{nb_core}{The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.}
+
+\item{...}{Other arguments passed to methods}
 }
 \value{
 The water budget

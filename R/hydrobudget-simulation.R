@@ -98,7 +98,7 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' )
 #' head(water_budget)
 #' }
-compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_core = NULL) {
+compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_core = NULL, ...) {
   gc()
   pb <- .newProgress(total = 4)
 

@@ -47,10 +47,22 @@
 #' observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow rates in mm/d
 #' alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
 #' 
+#' # Calibration parameters
+#' HB <- rechaRge::new_hydrobudget(
+#'   T_m = 2.1, # melting temperature (°C)
+#'   C_m = 6.2, # melting coefficient (mm/°C/d)
+#'   TT_F = -17.6, # Threshold temperature for soil frost (°C)
+#'   F_T = 16.4, # Freezing time (d)
+#'   t_API = 3.9, # Antecedent precipitation index time (d)
+#'   f_runoff = 0.63, # Runoff factor (-)
+#'   sw_m = 431, # Maximum soil water content (mm)
+#'   f_inf = 0.07 # infiltration factor (-)
+#' )
+#' 
 #' # ... compute the water budget ...
 #'
 #' result <- compute_simulation_quality_assessment(
-#'   calibration = param, 
+#'   HB, 
 #'   water_budget = water_budget,
 #'   rcn_gauging = input_rcn_gauging, 
 #'   observed_flow = observed_flow,

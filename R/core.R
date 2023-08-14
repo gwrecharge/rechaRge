@@ -37,18 +37,19 @@
 #' @param climate The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.
 #' @param period The start and end years. If not provided, the start/end years will be extracted from the climate data.
 #' @param nb_core The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.
-#'
+#' @param ... Other arguments passed to methods
+#' 
 #' @return The water budget
 #' @rdname compute_recharge
 #' @export
-compute_recharge <- function(obj, rcn, climate, period = NULL, nb_core = NULL) {
+compute_recharge <- function(obj, rcn, climate, period = NULL, nb_core = NULL, ...) {
   UseMethod("compute_recharge")
 }
 
 #' @rdname compute_recharge
 #' @method compute_recharge default
 #' @export
-compute_recharge.default <- function(obj, rcn, climate, period = NULL, nb_core = NULL) {
+compute_recharge.default <- function(obj, rcn, climate, period = NULL, nb_core = NULL, ...) {
   cat("The compute recharge function has no default model\n")
 }
 
