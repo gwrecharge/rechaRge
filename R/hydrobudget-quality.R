@@ -1,7 +1,7 @@
 #' Simulation quality assessment
-#' 
+#'
 #' Evaluates the simulated water budget with the average KGE.
-#' 
+#'
 #' The columns of the water budget data set input are:
 #' * **year**
 #' * **month**
@@ -14,21 +14,21 @@
 #' * **runoff_2**
 #' * **delta_reservoir**
 #' * **rcn_cell**
-#' 
+#'
 #' The columns of the observed flow data set input are:
 #' * **year**
 #' * **month**
 #' * **day**
 #' * **one column per station** (named by the station ID), the flow rates in mm/day
-#' 
+#'
 #' The columns of the RCN gauging stations data set input are:
 #' * **cell_ID**, the cell ID
 #' * **gauging_stat**, the station ID
-#' 
+#'
 #' The columns of the Lyne and Hollick filter data set input are:
 #' * **station**, the station ID
 #' * **alpha**
-#' 
+#'
 #' @param obj The HydroBudget object with calibration parameters.
 #' @param water_budget The computed water budget. Input can be a data.frame/data.table or a path to a data file.
 #' @param rcn_gauging The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.
@@ -39,14 +39,14 @@
 #' @importFrom hydroGOF KGE
 #'
 #' @export
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' # Use input example files provided by the package
 #' examples_dir <- system.file("examples", package = "rechaRge")
 #' observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow rates in mm/d
 #' alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
-#' 
+#'
 #' # Calibration parameters
 #' HB <- rechaRge::new_hydrobudget(
 #'   T_m = 2.1, # melting temperature (°C)
@@ -58,22 +58,23 @@
 #'   sw_m = 431, # Maximum soil water content (mm)
 #'   f_inf = 0.07 # infiltration factor (-)
 #' )
-#' 
+#'
 #' # ... compute the water budget ...
 #'
 #' result <- compute_simulation_quality_assessment(
-#'   HB, 
+#'   HB,
 #'   water_budget = water_budget,
-#'   rcn_gauging = input_rcn_gauging, 
+#'   rcn_gauging = input_rcn_gauging,
 #'   observed_flow = observed_flow,
-#'   alpha_lyne_hollick = alpha_lyne_hollick, 
-#'   period = simul_period)
+#'   alpha_lyne_hollick = alpha_lyne_hollick,
+#'   period = simul_period
+#' )
 #' }
 compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging, observed_flow, alpha_lyne_hollick, period = NULL) {
   water_budget_data <- .as.data.table(water_budget)
   rcn_gauging_data <- .as.data.table(rcn_gauging)
   year_range <- period
-  
+
   # 1.3-Simulation period ####
   if (is.null(year_range)) {
     year_range <- c(min(water_budget_data$year), max(water_budget_data$year))
@@ -85,7 +86,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
   if (year_end < year_start) {
     stop("Wrong simulation period, start year must be before end year")
   }
-  
+
   # load and filter observed flow
   observed_flow_ <- .as.data.table(observed_flow)
   list_year <- seq(year_start, year_end, 1)
@@ -93,7 +94,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
   flow <- process_river_flow(observed_flow_, alpha_lyne_hollick)
   observed_flow_month <- flow$observed_flow_month
   gauging <- flow$gauging
-  
+
   # 1.4-Calibration parameters ####
   # 1.4.1-Snow model
   calibration_ <- obj$calibration
@@ -109,11 +110,11 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
   # 1.4.4-soil parameters
   sw_m <- calibration_$sw_m
   f_inf <- calibration_$f_inf
-  
+
   output <- list(
     gauging = c()
   )
-  
+
   for (st in 1:length(gauging)) {
     # 1.7.1-load the modeled data per gauging station ####
     setkey(water_budget_data, rcn_cell)
@@ -130,22 +131,22 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
       delta_reservoir = mean(delta_reservoir)
     ), .(year, month)]
     budget_month$gauging_stat <- gauging[st]
-    
+
     # 1.7.2-Create the comparison data frame ####
     cols <- which(colnames(observed_flow_month) %in% c(
       "year", "month", as.character(unique(budget_month$gauging_stat)),
       paste(as.character(unique(budget_month$gauging_stat)), "_bf", sep = "")
     ))
     comparison_month <- merge(observed_flow_month[, ..cols],
-                              budget_month[, 1:(ncol(budget_month) - 1), with = FALSE],
-                              by = c("year", "month"), all.x = TRUE
+      budget_month[, 1:(ncol(budget_month) - 1), with = FALSE],
+      by = c("year", "month"), all.x = TRUE
     )
     rm(cols)
     colnames(comparison_month)[1:4] <- c("year", "month", "q", "qbase")
-    
+
     # 1.7.3-save the simulation results by gauging station ####
     output$gauging <- append(output$gauging, list(list(gauging = gauging[st], comparison_month = comparison_month)))
-    
+
     # 1.7.4-Objective functions ####
     # combining the error indicators in a data table
     error_ind <- matrix(ncol = 2, nrow = 2)
@@ -163,42 +164,42 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
     validation_end <- flow_end
     # defining the modeled and observed on each period for flow and baseflow
     m_q_month_cal <- (comparison_month$runoff[which(comparison_month$year %in% c(calibration_start:calibration_end))] +
-                        comparison_month$runoff_2[which(comparison_month$year %in% c(calibration_start:calibration_end))] +
-                        comparison_month$gwr[which(comparison_month$year %in% c(calibration_start:calibration_end))])
+      comparison_month$runoff_2[which(comparison_month$year %in% c(calibration_start:calibration_end))] +
+      comparison_month$gwr[which(comparison_month$year %in% c(calibration_start:calibration_end))])
     o_q_month_cal <- comparison_month[[3]][which(comparison_month$year %in% c(calibration_start:calibration_end))]
     m_q_month_val <- (comparison_month$runoff[which(comparison_month$year %in% c(validation_start:validation_end))] +
-                        comparison_month$runoff_2[which(comparison_month$year %in% c(validation_start:validation_end))] +
-                        comparison_month$gwr[which(comparison_month$year %in% c(validation_start:validation_end))])
+      comparison_month$runoff_2[which(comparison_month$year %in% c(validation_start:validation_end))] +
+      comparison_month$gwr[which(comparison_month$year %in% c(validation_start:validation_end))])
     o_q_month_val <- comparison_month[[3]][which(comparison_month$year %in% c(validation_start:validation_end))]
-    
+
     m_baseflow_month_cal <- comparison_month$gwr[which(comparison_month$year %in% c(calibration_start:calibration_end))]
     o_baseflow_month_cal <- comparison_month[[4]][which(comparison_month$year %in% c(calibration_start:calibration_end))]
     m_baseflow_month_val <- comparison_month$gwr[which(comparison_month$year %in% c(validation_start:validation_end))]
     o_baseflow_month_val <- comparison_month[[4]][which(comparison_month$year %in% c(validation_start:validation_end))]
     # KGE
     error_ind[1, 1] <- KGE(m_q_month_cal[which(!is.na(o_q_month_cal))],
-                           o_q_month_cal[which(!is.na(o_q_month_cal))],
-                           na.rm = TRUE
+      o_q_month_cal[which(!is.na(o_q_month_cal))],
+      na.rm = TRUE
     )
     error_ind[1, 2] <- KGE(m_q_month_val[which(!is.na(o_q_month_val))],
-                           o_q_month_val[which(!is.na(o_q_month_val))],
-                           na.rm = TRUE
+      o_q_month_val[which(!is.na(o_q_month_val))],
+      na.rm = TRUE
     )
-    
+
     error_ind[2, 1] <- KGE(m_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
-                           o_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
-                           na.rm = TRUE
+      o_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
+      na.rm = TRUE
     )
     error_ind[2, 2] <- KGE(m_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
-                           o_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
-                           na.rm = TRUE
+      o_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
+      na.rm = TRUE
     )
     # Clean
     rm(
       m_q_month_cal, o_q_month_cal, m_q_month_val, o_q_month_val, m_baseflow_month_cal, o_baseflow_month_cal,
       m_baseflow_month_val, o_baseflow_month_val
     )
-    
+
     # 1.7.5-write the simulation metadata in a datatable and save it ####
     if (st == 1) {
       simulation_metadata <- data.table(
@@ -252,15 +253,15 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
     }
     if (st == length(gauging)) {
       simulation_metadata[nrow(simulation_metadata), c("KGE_mean_cal", "KGE_mean_val") := as.list(c(mean((simulation_metadata$KGE_qtot_cal + simulation_metadata$KGE_qbase_cal) / 2),
-                                                                                                    mean((simulation_metadata$KGE_qtot_val + simulation_metadata$KGE_qbase_val) / 2),
-                                                                                                    na.rm = TRUE
+        mean((simulation_metadata$KGE_qtot_val + simulation_metadata$KGE_qbase_val) / 2),
+        na.rm = TRUE
       ))[1:2]]
       output$simulation_metadata <- simulation_metadata
     }
     rm(calibration_start, calibration_end, validation_start, validation_end, flow_beg, flow_end)
   }
   rm(st, comparison_month)
-  
+
   output
 }
 
@@ -283,57 +284,56 @@ process_river_flow <- function(observed_flow, alpha_lyne_hollick) {
   observed_flow_ <- .as.data.table(observed_flow)
   alpha_lyne_hollick_ <- .as.data.table(alpha_lyne_hollick)
   # TODO check data structures
-  
+
   # 1-Observations data processing ####
   # 1.1-Select the observed flow for the simulation period and interpolate the gaps ####
   observed_flow_no_na <- observed_flow_[, which(unlist(lapply(observed_flow_, function(x) !all(is.na(x))))), with = F]
-  
+
   if (ncol(observed_flow_no_na) < 4) {
     stop("error - no observed data on the simulation period")
   }
-  
+
   for (c in 4:ncol(observed_flow_no_na)) {
     observed_flow_no_na[[c]][2:(nrow(observed_flow_no_na) - 1)] <- zoo::na.approx(observed_flow_no_na[[c]][2:(nrow(observed_flow_no_na) - 1)],
-                                                                                  maxgap = 5, na.rm = FALSE
+      maxgap = 5, na.rm = FALSE
     )
   } # fill up the gap in the observed flow up to 5 days
   observed_flow_no_na$date <- as.POSIXct(paste(observed_flow_no_na$year, observed_flow_no_na$month, observed_flow_no_na$day, sep = "-"),
-                                         format = "%Y-%m-%d", tz = "UTC"
+    format = "%Y-%m-%d", tz = "UTC"
   )
   observed_flow_no_na <- observed_flow_no_na[, c(ncol(observed_flow_no_na), 1:3, 4:(ncol(observed_flow_no_na) - 1)), with = FALSE]
   observed_flow_month <- data.table::data.table(
     year = c(rep(unique(observed_flow_no_na$year), each = 12)),
     month = c(rep(c(1:12), length(unique(observed_flow_no_na$year))))
   )
-  
+
   # 1.2-List of the available gauging station for the simulation period ####
   if (ncol(observed_flow_no_na) > 4) {
     gauging <- as.numeric(colnames(observed_flow_no_na)[5:ncol(observed_flow_no_na)])
   }
-  
+
   # 1.3-compute baseflow with Lyne and Hollick (alpha calibrated independently) ####
   if (ncol(observed_flow_no_na) < 5) {
     stop("error - no observed river flow on the simulation period - baseflow computation impossible")
   }
-  
+
   for (c in 5:ncol(observed_flow_no_na)) {
     # c<-5
     bf <- observed_flow_no_na[, c(1:3, c), with = FALSE]
     bf <- na.contiguous(bf) # select the longest period without NA
     colnames(bf) <- c("Date", "year", "month", "Q")
     bf$bf_lh <- baseflows(bf[, c(1, 4), with = FALSE],
-                          alpha_lyne_hollick_$alpha[which(alpha_lyne_hollick_$station == colnames(observed_flow_no_na)[c])],
-                          n.reflected = 30, ts = "daily"
+      alpha_lyne_hollick_$alpha[which(alpha_lyne_hollick_$station == colnames(observed_flow_no_na)[c])],
+      n.reflected = 30, ts = "daily"
     )[, 3]
     q_month <- bf[, .(qmonth = sum(Q, na.rm = TRUE), bf_lh_month = sum(bf_lh, na.rm = TRUE)), .(year, month)]
     colnames(q_month)[3:4] <- c(colnames(observed_flow_no_na)[c], paste(colnames(observed_flow_no_na)[c], "_bf", sep = ""))
     observed_flow_month <- merge(observed_flow_month, q_month, by = c("year", "month"), all.x = TRUE)
   }
-  
+
   # returned value
   list(
     observed_flow_month = observed_flow_month,
     gauging = gauging
   )
 }
-

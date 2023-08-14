@@ -87,11 +87,12 @@ HB <- rechaRge::new_hydrobudget(
 # ... compute the water budget ...
 
 result <- compute_simulation_quality_assessment(
-  HB, 
+  HB,
   water_budget = water_budget,
-  rcn_gauging = input_rcn_gauging, 
+  rcn_gauging = input_rcn_gauging,
   observed_flow = observed_flow,
-  alpha_lyne_hollick = alpha_lyne_hollick, 
-  period = simul_period)
+  alpha_lyne_hollick = alpha_lyne_hollick,
+  period = simul_period
+)
 }
 }

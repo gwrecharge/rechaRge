@@ -4,8 +4,8 @@ remotes::install_github("gwrecharge/rechaRge", ref = "dev")
 # 2-Load the input data for the simulation and enter the parameters values ####
 
 ## 2.2-Input data ####
-# use input example files provided by the package 
-examples_dir <- system.file("examples", package="rechaRge")
+# use input example files provided by the package
+examples_dir <- system.file("examples", package = "rechaRge")
 input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
 input_climate <- file.path(examples_dir, "input", "input_climate.csv.gz") # precipitation total in mm/d
 input_rcn_gauging <- file.path(examples_dir, "input", "input_rcn_gauging.csv.gz")
@@ -26,7 +26,7 @@ HB <- rechaRge::new_hydrobugdet(
 simul_period <- c(2010, 2017)
 
 ## 2.5-Parallel computing option ####
-#nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
+# nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
 
 # 3-Simulation with the HydroBudget model ####
 water_budget <- rechaRge::compute_recharge(
@@ -34,7 +34,7 @@ water_budget <- rechaRge::compute_recharge(
   rcn = input_rcn,
   climate = input_climate,
   period = simul_period
-  #nb_core = nb_core
+  # nb_core = nb_core
 )
 head(water_budget)
 
@@ -43,12 +43,13 @@ observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow
 alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
 
 result <- rechaRge::compute_simulation_quality_assessment(
-  HB, 
+  HB,
   water_budget = water_budget,
-  rcn_gauging = input_rcn_gauging, 
+  rcn_gauging = input_rcn_gauging,
   observed_flow = observed_flow,
-  alpha_lyne_hollick = alpha_lyne_hollick, 
-  period = simul_period)
+  alpha_lyne_hollick = alpha_lyne_hollick,
+  period = simul_period
+)
 
 result$gauging[[1]]$gauging
 head(result$gauging[[1]]$comparison_month)
@@ -78,8 +79,9 @@ library(terra)
 library(ggplot2)
 library(cowplot)
 subtitle <- ifelse(simul_period[1] == simul_period[2],
-                   paste0("In ", simul_period[1]), 
-                   paste0("From ", simul_period[1], " to ", simul_period[2]))
+  paste0("In ", simul_period[1]),
+  paste0("From ", simul_period[1], " to ", simul_period[2])
+)
 runoff <- terra::rast(file.path(sim_dir, "05_interannual_runoff_NAD83.tif"))
 runoffplot <- ggplot() +
   geom_spatraster(data = runoff) +

@@ -1,8 +1,8 @@
 # HydroBudget model
 
 #' HydroBudget object
-#' 
-#' Make a new HydroBudget object, by providing the calibration parameters for the 
+#'
+#' Make a new HydroBudget object, by providing the calibration parameters for the
 #' model computation.
 #'
 #' @param T_m The melting temperature (°C)
@@ -35,7 +35,7 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
       f_inf = f_inf,
       sw_init = 50
     )
-  ), class="hydrobudget")
+  ), class = "hydrobudget")
 }
 
 #' Simulation using HydroBudget model
@@ -59,7 +59,7 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' @importFrom stats na.contiguous na.omit
 #' @importFrom airGR PE_Oudin
 #' @importFrom plyr .
-#' 
+#'
 #' @examples
 #' \dontrun{
 #' # Use input example files provided by the package

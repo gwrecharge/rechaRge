@@ -32,7 +32,7 @@
 #' @keywords internal
 .newProgress <- function(format = "  :what [:bar] :current/:total | :elapsed", clear = getOption("recharge.progress.clear", !interactive()), total, width = 100) {
   pb <- progress::progress_bar$new(format = format, clear = clear, total = total, width = width, show_after = 0)
-  pb$tick(0, tokens = list(what = ''))
+  pb$tick(0, tokens = list(what = ""))
   pb
 }
 
@@ -45,5 +45,5 @@
 #' Update the progress status if option "recharge.progress" is TRUE.
 #' @keywords internal
 .updateProgress <- function(progress, step, total, tokens = list()) {
-  if (getOption("recharge.progress", interactive())) progress$update(ratio = step/total, tokens = tokens)
+  if (getOption("recharge.progress", interactive())) progress$update(ratio = step / total, tokens = tokens)
 }
