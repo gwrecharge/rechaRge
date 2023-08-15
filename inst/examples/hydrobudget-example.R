@@ -1,5 +1,10 @@
 # 1-Install the package ####
+
+# Using remotes
 remotes::install_github("gwrecharge/rechaRge", ref = "dev")
+
+# OR using pak
+pak::pkg_install("gwrecharge/rechaRge@dev")
 
 # 2-Load the input data for the simulation and enter the parameters values ####
 
