@@ -30,10 +30,10 @@ Imports:
     raster,
     stats,
     sp,
-    zoo
-Suggests: 
-    testthat (>= 3.0.0),
+    zoo,
     R.utils
+Suggests: 
+    testthat (>= 3.0.0)
 URL: https://github.com/gwrecharge/rechaRge/,
     https://hess.copernicus.org/articles/25/6567/2021/,
     https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/EUDV3H

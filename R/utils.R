@@ -1,6 +1,7 @@
 #' Make a data.table from input: coerce it or read it (if it is a file path)
 #' @keywords internal
 #' @importFrom data.table as.data.table fread
+#' @import R.utils
 .as.data.table <- function(input) {
   if (is.character(input)) {
     if (!file.exists(input)) {
