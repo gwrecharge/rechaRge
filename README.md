@@ -1,4 +1,24 @@
-# rechaRge
+# rechaRge [![CRAN status](https://www.r-pkg.org/badges/version/rechaRge)](https://CRAN.R-project.org/package=rechaRge) [![R-CMD-check](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml)
+
+## Installation
+
+Using `remotes`
+
+```r
+remotes::install_github("gwrecharge/rechaRge", ref = "dev")
+```
+
+OR using `pak`
+
+```r
+pak::pkg_install("gwrecharge/rechaRge@dev")
+```
+
+## Example
+
+See [hydrobudget-example.R](https://github.com/gwrecharge/rechaRge/blob/dev/inst/examples/hydrobudget-example.R).
+
+## Publication
 
 Original material from **HydroBudget – Groundwater recharge model in R** [https://doi.org/10.5683/SP3/EUDV3H](https://doi.org/10.5683/SP3/EUDV3H).
 

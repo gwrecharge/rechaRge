@@ -16,3 +16,8 @@
 ^derby.log$
 ^logs$
 ^pkgdown$
+^rechaRge\.Rproj$
+^LICENSE\.md$
+simulation_HydroBudget*
+^\.github$
+^Makefile$
