@@ -61,7 +61,7 @@ head(result$gauging[[1]]$comparison_month)
 result$simulation_metadata
 
 ## 5-Save the simulation results ####
-sim_dir <- file.path(getwd(), paste0("simulation_HydroBudget_", format(Sys.time(), "%Y%m%dT%H:%M")))
+sim_dir <- file.path(getwd(), paste0("simulation_HydroBudget_", format(Sys.time(), "%Y%m%dT%H_%M")))
 
 # 5.1-write output files
 rechaRge::write_results(water_budget, output_dir = sim_dir)
