@@ -36,8 +36,6 @@
 #' @param alpha_lyne_hollick The Lyne and Hollick filter. Input can be a data.frame/data.table or a path to a data file.
 #' @param period The start and end years. If not provided, the start/end years will be extracted from the water budget data.
 #'
-#' @importFrom hydroGOF KGE
-#'
 #' @export
 #'
 #' @examples
