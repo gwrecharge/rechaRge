@@ -19,7 +19,7 @@ KGE <- function(sim, obs) {
   if (length(vi) > 0) {
     # Mean and Standard deviation
     obs <- as.numeric(obs[vi])
-    mean.obs <- mean(obs, na.rm = TRUE)
+    mean.obs <- base::mean(obs, na.rm = TRUE)
     sigma.obs <- stats::sd(obs, na.rm = TRUE)
     
     # KGE Computation
@@ -31,7 +31,7 @@ KGE <- function(sim, obs) {
     } else {
       # Mean and Standard deviation
       sim <- as.numeric(sim[vi])
-      mean.sim <- mean(sim, na.rm = TRUE)
+      mean.sim <- base::mean(sim, na.rm = TRUE)
       sigma.sim <- stats::sd(sim, na.rm = TRUE)
       
       # Pearson product-moment correlation coefficient
