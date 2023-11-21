@@ -21,7 +21,6 @@ Imports:
     data.table,
     doParallel,
     foreach,
-    hydroGOF,
     hydrostats,
     lubridate,
     parallel,

@@ -36,8 +36,6 @@
 #' @param alpha_lyne_hollick The Lyne and Hollick filter. Input can be a data.frame/data.table or a path to a data file.
 #' @param period The start and end years. If not provided, the start/end years will be extracted from the water budget data.
 #'
-#' @importFrom hydroGOF KGE
-#'
 #' @export
 #'
 #' @examples
@@ -178,22 +176,14 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
     o_baseflow_month_val <- comparison_month[[4]][which(comparison_month$year %in% c(validation_start:validation_end))]
     # KGE
     error_ind[1, 1] <- KGE(m_q_month_cal[which(!is.na(o_q_month_cal))],
-      o_q_month_cal[which(!is.na(o_q_month_cal))],
-      na.rm = TRUE
-    )
+      o_q_month_cal[which(!is.na(o_q_month_cal))])
     error_ind[1, 2] <- KGE(m_q_month_val[which(!is.na(o_q_month_val))],
-      o_q_month_val[which(!is.na(o_q_month_val))],
-      na.rm = TRUE
-    )
+      o_q_month_val[which(!is.na(o_q_month_val))])
 
     error_ind[2, 1] <- KGE(m_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
-      o_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))],
-      na.rm = TRUE
-    )
+      o_baseflow_month_cal[which(!is.na(o_baseflow_month_cal))])
     error_ind[2, 2] <- KGE(m_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
-      o_baseflow_month_val[which(!is.na(o_baseflow_month_val))],
-      na.rm = TRUE
-    )
+      o_baseflow_month_val[which(!is.na(o_baseflow_month_val))])
     # Clean
     rm(
       m_q_month_cal, o_q_month_cal, m_q_month_val, o_q_month_val, m_baseflow_month_cal, o_baseflow_month_cal,
