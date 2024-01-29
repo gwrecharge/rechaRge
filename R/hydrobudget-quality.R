@@ -115,18 +115,18 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
 
   for (st in 1:length(gauging)) {
     # 1.7.1-load the modeled data per gauging station ####
-    setkey(water_budget_data, rcn_cell)
+    setkey(water_budget_data, cols = "rcn_cell")
     budget_month <- water_budget_data[.(rcn_gauging_data$cell_ID[which(rcn_gauging_data$gauging_stat == gauging[st])])]
     budget_month <- na.omit(budget_month, invert = FALSE)
     budget_month <- budget_month[, .(
-      VI = mean(VI),
-      t_mean = mean(t_mean),
-      runoff = mean(runoff),
-      pet = mean(pet),
-      aet = mean(aet),
-      gwr = mean(gwr),
-      runoff_2 = mean(runoff_2),
-      delta_reservoir = mean(delta_reservoir)
+      VI = mean(get("VI")),
+      t_mean = mean(get("t_mean")),
+      runoff = mean(get("runoff")),
+      pet = mean(get("pet")),
+      aet = mean(get("aet")),
+      gwr = mean(get("gwr")),
+      runoff_2 = mean(get("runoff_2")),
+      delta_reservoir = mean(get("delta_reservoir"))
     ), .(year, month)]
     budget_month$gauging_stat <- gauging[st]
 
@@ -135,7 +135,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
       "year", "month", as.character(unique(budget_month$gauging_stat)),
       paste(as.character(unique(budget_month$gauging_stat)), "_bf", sep = "")
     ))
-    comparison_month <- merge(observed_flow_month[, ..cols],
+    comparison_month <- merge(observed_flow_month[, cols, with = FALSE],
       budget_month[, 1:(ncol(budget_month) - 1), with = FALSE],
       by = c("year", "month"), all.x = TRUE
     )
@@ -200,15 +200,15 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
         KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
         KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
         qtot_sim = mean(budget_month[
-          , .(qtot = sum(runoff + runoff_2 + gwr, na.rm = TRUE)),
+          , .(qtot = sum(get("runoff") + get("runoff_2") + get("gwr"), na.rm = TRUE)),
           .(year)
         ][[2]]),
         aet_sim = mean(budget_month[
-          , .(aet = sum(aet, na.rm = TRUE)),
+          , .(aet = sum(get("aet"), na.rm = TRUE)),
           .(year)
         ][[2]]),
         gwr_sim = mean(budget_month[
-          , .(gwr = sum(gwr, na.rm = TRUE)),
+          , .(gwr = sum(get("gwr"), na.rm = TRUE)),
           .(year)
         ][[2]]),
         time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
@@ -225,15 +225,15 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
           KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
           KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
           qtot_sim = mean(budget_month[
-            , .(qtot = sum(runoff + runoff_2 + gwr, na.rm = TRUE)),
+            , .(qtot = sum(get("runoff") + get("runoff_2") + get("gwr"), na.rm = TRUE)),
             .(year)
           ][[2]]),
           aet_sim = mean(budget_month[
-            , .(aet = sum(aet, na.rm = TRUE)),
+            , .(aet = sum(get("aet"), na.rm = TRUE)),
             .(year)
           ][[2]]),
           gwr_sim = mean(budget_month[
-            , .(gwr = sum(gwr, na.rm = TRUE)),
+            , .(gwr = sum(get("gwr"), na.rm = TRUE)),
             .(year)
           ][[2]]),
           time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
@@ -316,7 +316,8 @@ process_river_flow <- function(observed_flow, alpha_lyne_hollick) {
       alpha_lyne_hollick_$alpha[which(alpha_lyne_hollick_$station == colnames(observed_flow_no_na)[c])],
       n.reflected = 30, ts = "daily"
     )[, 3]
-    q_month <- bf[, .(qmonth = sum(Q, na.rm = TRUE), bf_lh_month = sum(bf_lh, na.rm = TRUE)), .(year, month)]
+    q_month <- bf[, .(qmonth = sum(get("Q"), na.rm = TRUE),
+                      bf_lh_month = sum(get("bf_lh"), na.rm = TRUE)), .(year, month)]
     colnames(q_month)[3:4] <- c(colnames(observed_flow_no_na)[c], paste(colnames(observed_flow_no_na)[c], "_bf", sep = ""))
     observed_flow_month <- merge(observed_flow_month, q_month, by = c("year", "month"), all.x = TRUE)
   }

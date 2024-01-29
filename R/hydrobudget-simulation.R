@@ -164,7 +164,9 @@ compute_vertical_inflow <- function(calibration, climate_data, nb_core) {
   # 1.5.1-Parallel loop ####
   cluster <- .make_cluster(nb_core)
   climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_cell))), .combine = rbind, .inorder = FALSE) %dopar% {
-    cellgrid <- as.character(unique(climate_data$climate_cell)[k])
+    # NSE
+    climate_cell <- NULL
+    cellgrid <- as.character(unique(climate_data$climate_cell)[get("k")])
     input_dd <- climate_data[climate_cell == cellgrid]
     compute_vertical_inflow_cell(calibration, input_dd)
   }
@@ -248,9 +250,13 @@ compute_potential_evapotranspiration_cell <- function(input_dd) {
 compute_water_budget <- function(calibration, rcn_data, climate_data, nb_core) {
   cluster <- .make_cluster(nb_core)
   unique_rcn_cell <- unique(rcn_data$cell_ID)
+  j <- 1
   water_budget <- foreach(j = 1:(length(unique_rcn_cell)), .combine = rbind, .inorder = FALSE) %dopar% {
     # 1.6.1.1-subsets ####
-    rcn_subset <- rcn_data[cell_ID == unique_rcn_cell[j]]
+    cid <- unique_rcn_cell[j]
+    # NSE
+    cell_ID <- NULL
+    rcn_subset <- rcn_data[cell_ID == cid]
     rcn_climate <- merge(rcn_subset, climate_data, by = "climate_cell", all.x = TRUE)
     rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_cell, rcn_climate$cell_ID, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
     compute_water_budget_cell(calibration, rcn_climate)
@@ -385,6 +391,8 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
     "gwr" = as.numeric(gwr),
     "runoff_2" = as.numeric(runoff_2)
   )
+  # NSE
+  VI <- t_mean <- runoff <- pet <- rcn_cell <- NULL
   w_b <- w_b[, .(
     VI = sum(VI),
     t_mean = mean(t_mean),
@@ -396,7 +404,7 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
     runoff_2 = sum(runoff_2),
     delta_reservoir = sum(delta_reservoir)
   ), .(year, month)]
-  w_b[, (names(w_b)[3:ncol(w_b)]) := round(.SD, 1), .SDcols = names(w_b)[3:ncol(w_b)]]
+  w_b[, (names(w_b)[3:ncol(w_b)]) := round(get(".SD"), 1), .SDcols = names(w_b)[3:ncol(w_b)]]
   w_b[, rcn_cell := rcn_climate$cell_ID[1]]
   w_b
 }

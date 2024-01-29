@@ -70,16 +70,16 @@ write_results <- function(water_budget, output_dir = getwd()) {
   
   fwrite(water_budget, file.path(output_dir, "01_bilan_spat_month.csv"))
   budget_unspat <- water_budget[, .(
-    VI = mean(VI),
-    t_mean = mean(t_mean),
-    runoff = mean(runoff),
-    pet = mean(pet),
-    aet = mean(aet),
-    gwr = mean(gwr),
-    runoff_2 = mean(runoff_2),
-    delta_reservoir = mean(delta_reservoir)
+    VI = mean(get("VI")),
+    t_mean = mean(get("t_mean")),
+    runoff = mean(get("runoff")),
+    pet = mean(get("pet")),
+    aet = mean(get("aet")),
+    gwr = mean(get("gwr")),
+    runoff_2 = mean(get("runoff_2")),
+    delta_reservoir = mean(get("delta_reservoir"))
   ), .(year, month)]
-  budget_unspat[, (names(budget_unspat)[3:ncol(budget_unspat)]) := round(.SD, 1), .SDcols = names(budget_unspat)[3:ncol(budget_unspat)]]
+  budget_unspat[, (names(budget_unspat)[3:ncol(budget_unspat)]) := round(get(".SD"), 1), .SDcols = names(budget_unspat)[3:ncol(budget_unspat)]]
   fwrite(budget_unspat, file.path(output_dir, "02_bilan_unspat_month.csv"))
   rm(budget_unspat)
 }
@@ -108,15 +108,19 @@ write_rasters <- function(water_budget, input_rcn, crs, output_dir = getwd()) {
   rcn <- .as.data.table(input_rcn)
   
   budget_month_spat <- wb[
-    , .(runoff = sum(runoff + runoff_2, na.rm = TRUE), aet = sum(aet, na.rm = TRUE), gwr = sum(gwr, na.rm = TRUE)),
-    .(rcn_cell, year)
+    , .(runoff = sum(get("runoff") + get("runoff_2"), na.rm = TRUE),
+        aet = sum(get("aet"), na.rm = TRUE),
+        gwr = sum(get("gwr"), na.rm = TRUE)),
+    .(rcn_cell = get("rcn_cell"), year)
   ]
-  budget_month_spat <- budget_month_spat[, .(runoff = mean(runoff), aet = mean(aet), gwr = mean(gwr)), .(rcn_cell)]
+  budget_month_spat <- budget_month_spat[, .(runoff = mean(get("runoff")),
+                                             aet = mean(get("aet")),
+                                             gwr = mean(get("gwr"))), .(rcn_cell = get("rcn_cell"))]
   rcn <- rcn[which(!duplicated(rcn$cell_ID)), ]
   x_interannual <- merge(budget_month_spat, rcn[, c(2, 4, 5)], by.x = "rcn_cell", by.y = "cell_ID")
-  runoff <- x_interannual[, .(x = X_L93, y = Y_L93, z = runoff)]
-  aet <- x_interannual[, .(x = X_L93, y = Y_L93, z = aet)]
-  gwr <- x_interannual[, .(x = X_L93, y = Y_L93, z = gwr)]
+  runoff <- x_interannual[, .(x = get("X_L93"), y = get("Y_L93"), z = runoff)]
+  aet <- x_interannual[, .(x = get("X_L93"), y = get("Y_L93"), z = aet)]
+  gwr <- x_interannual[, .(x = get("X_L93"), y = get("Y_L93"), z = gwr)]
   
   sp::coordinates(runoff) <- ~ x + y
   runoff <- rasterFromXYZ(runoff, crs = crs)
