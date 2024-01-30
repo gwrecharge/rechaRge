@@ -28,6 +28,15 @@ HB <- rechaRge::new_hydrobugdet(
   sw_m = 431, # Maximum soil water content (mm)
   f_inf = 0.07 # infiltration factor (-)
 )
+HB$rcn_columns <- list(
+  climate_id = "climate_cell",
+  rcn_id = "cell_ID",
+  RCNII = "RCNII",
+  lon = "X_L93",
+  lat = "Y_L93"
+)
+HB$rcn_gauging_columns$rcn_id <- "cell_ID"
+HB$climate_columns$climate_id <- "climate_cell"
 
 ## 2.4-Simulation period ####
 simul_period <- c(2010, 2017)
@@ -66,8 +75,9 @@ result$simulation_metadata
 sim_dir <- file.path(getwd(), paste0("simulation_HydroBudget_", format(Sys.time(), "%Y%m%dT%H_%M")))
 
 # 5.1-write output files
-rechaRge::write_results(water_budget, output_dir = sim_dir)
-rechaRge::write_rasters(
+rechaRge::write_recharge_results(HB, water_budget, output_dir = sim_dir)
+rechaRge::write_recharge_rasters(
+  HB,
   water_budget = water_budget,
   input_rcn = input_rcn,
   crs = "+proj=lcc +lat_1=60 +lat_2=46 +lat_0=44 +lon_0=-68.5 +x_0=0 +y_0=0 +ellps=GRS80 +datum=NAD83 +units=m +no_defs",

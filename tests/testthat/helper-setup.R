@@ -11,7 +11,7 @@ load_example_datasets <- function() {
 }
 
 load_hydrobudget <- function() {
-  new_hydrobugdet(
+  HB <- new_hydrobugdet(
     T_m = 2.1, # melting temperature (°C)
     C_m = 6.2, # melting coefficient (mm/°C/d)
     TT_F = -17.6, # Threshold temperature for soil frost (°C)
@@ -21,4 +21,13 @@ load_hydrobudget <- function() {
     sw_m = 431, # Maximum soil water content (mm)
     f_inf = 0.07 # infiltration factor (-)
   )
+  HB$rcn_columns <- list(
+    climate_id = "climate_cell",
+    rcn_id = "cell_ID",
+    RCNII = "RCNII",
+    lon = "X_L93",
+    lat = "Y_L93"
+  )
+  HB$climate_columns$climate_id <- "climate_cell"
+  HB
 }

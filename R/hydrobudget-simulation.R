@@ -34,6 +34,35 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
       sw_m = sw_m,
       f_inf = f_inf,
       sw_init = 50
+    ),
+    rcn_columns = list(
+      climate_id = "climate_id",
+      rcn_id = "rcn_id",
+      RCNII = "RCNII",
+      lon = "lon",
+      lat = "lat"
+    ),
+    rcn_gauging_columns = list(
+      rcn_id = "rcn_id",
+      gauging_stat = "gauging_stat"
+    ),
+    climate_columns = list(
+      climate_id = "climate_id",
+      day = "day",
+      month = "month",
+      year = "year",
+      t_mean = "t_mean",
+      p_tot = "p_tot",
+      lat = "lat"
+    ),
+    observed_flow_columns = list(
+      day = "day",
+      month = "month",
+      year = "year"
+    ),
+    alpha_lyne_hollick_columns = list(
+      station = "station",
+      alpha = "alpha"
     )
   ), class = "hydrobudget")
 }
@@ -102,15 +131,14 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_co
   gc()
   pb <- .newProgress(total = 4)
 
-  # 1.1-Load the input data ####
+  # Load the input data and ensure expected column names 
   .updateProgress(pb, step = 1, total = 4, tokens = list(what = "Checking input data..."))
-  # TODO sanity checks
-  rcn_data <- .as.data.table(rcn)
-  climate_data <- .as.data.table(climate)
+  rcn_data <- .as.data.table(rcn, obj$rcn_columns)
+  climate_data <- .as.data.table(climate, obj$climate_columns)
   year_range <- period
   nb_core <- nb_core
 
-  # 1.2-Simulation period ####
+  # Simulation period
   if (is.null(year_range)) {
     year_range <- c(min(climate_data$year), max(climate_data$year))
   } else if (length(year_range) == 1) {
@@ -125,25 +153,25 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_co
   list_year <- seq(year_start, year_end, 1)
   climate_data <- climate_data[year %in% list_year]
 
-  # 1.3-cluster parameters ####
+  # cluster parameters
   ifelse(is.null(nb_core),
     nb_core <- detectCores() - 1,
     nb_core <- as.numeric(nb_core)
   )
 
-  # 1.4-Calibration parameters ####
-  calibration_ <- obj$calibration
+  # Calibration parameters
+  # TODO calibration validation?
 
-  # 1.5-execute the snow model and compute Oudin PET ####
+  # Execute the snow model and compute Oudin PET
   .updateProgress(pb, step = 2, total = 4, tokens = list(what = "Computing vertical inflow..."))
-  climate_data <- compute_vertical_inflow(calibration_, climate_data, nb_core)
+  climate_data <- compute_vertical_inflow(obj, climate_data, nb_core)
 
-  # 1.6-run HB water budget partitioning ####
-  # 1.6.1-Model loop by grid cell in parallel #####
+  # Run HB water budget partitioning
+  # Model loop by grid cell in parallel
   .updateProgress(pb, step = 3, total = 4, tokens = list(what = "Computing water budget..."))
-  water_budget <- compute_water_budget(calibration_, rcn_data, climate_data, nb_core)
+  water_budget <- compute_water_budget(obj, rcn_data, climate_data, nb_core)
 
-  # 1.9-Clean ####
+  # Clean
   rm(climate_data, rcn_data)
   gc()
   .updateProgress(pb, step = 4, total = 4, tokens = list(what = "Completed"))
@@ -154,47 +182,47 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_co
 #' Determine if precipitation is rain or snow and simulate the snowpack (accumulation
 #' and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).
 #'
-#' @param calibration The calibration parameters.
+#' @param obj The HydroBudget object.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
 #' @param nb_core The number of cores to use in the parallel computations.
 #'
 #' @keywords internal
-compute_vertical_inflow <- function(calibration, climate_data, nb_core) {
-  # 1.5-execute the snow model and compute Oudin PET ####
-  # 1.5.1-Parallel loop ####
+compute_vertical_inflow <- function(obj, climate_data, nb_core) {
+  # 1.5-execute the snow model and compute Oudin PET
+  # 1.5.1-Parallel loop
   cluster <- .make_cluster(nb_core)
-  climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_cell))), .combine = rbind, .inorder = FALSE) %dopar% {
+  climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dopar% {
     # NSE
-    climate_cell <- NULL
-    cellgrid <- as.character(unique(climate_data$climate_cell)[get("k")])
-    input_dd <- climate_data[climate_cell == cellgrid]
-    compute_vertical_inflow_cell(calibration, input_dd)
+    climate_id <- NULL
+    cellgrid <- as.character(unique(climate_data$climate_id)[get("k")])
+    input_dd <- climate_data[climate_id == cellgrid]
+    compute_vertical_inflow_cell(obj, input_dd)
   }
   .stop_cluster(cluster)
   rm(cluster)
 
-  # 1.5.2-Compute vertical inflow (VI) ####
+  # Compute vertical inflow (VI)
   climate_data_VI$VI <- climate_data_VI$rain + climate_data_VI$melt
   climate_data_VI[, c(1:6, 14, 13)]
 }
 
 #' Compute the vertical inflow and the potential evapotranspiration (PET) for a single cell
 #'
-#' @param calibration The calibration parameters.
+#' @param obj The HydroBudget object.
 #' @param input_dd Spatially distributed daily precipitation and mean temperature time series in a single cell.
 #'
 #' @keywords internal
-compute_vertical_inflow_cell <- function(calibration, input_dd) {
-  # 1.5.1.1-load the packages ####
+compute_vertical_inflow_cell <- function(obj, input_dd) {
+  # Load the packages
   requireNamespace("data.table")
   requireNamespace("airGR")
 
-  # calibration parameters
-  T_m <- calibration$T_m
-  C_m <- calibration$C_m
-  T_snow <- calibration$T_snow
+  # Calibration parameters
+  T_m <- obj$calibration$T_m
+  C_m <- obj$calibration$C_m
+  T_snow <- obj$calibration$T_snow
 
-  # 1.5.1.2-loop for the snowpack ####
+  # Loop for the snowpack
   input_dd$snow <- ifelse(input_dd$t_mean < T_snow, input_dd$p_tot, 0)
   input_dd$rain <- ifelse(input_dd$t_mean > T_snow, input_dd$p_tot, 0)
   input_dd$dd <- ifelse(input_dd$t_mean - T_m > 0, input_dd$t_mean - T_m, 0)
@@ -217,86 +245,87 @@ compute_vertical_inflow_cell <- function(calibration, input_dd) {
       )
     )
   }
-  # 1.5.1.3-compute Oudin PET ####
-  input_dd$PET <- compute_potential_evapotranspiration_cell(input_dd)
+  # Compute Oudin PET
+  input_dd$PET <- compute_potential_evapotranspiration_cell(obj, input_dd)
 
   input_dd
 }
 
 #' Compute PET based on the Oudin formula
 #'
+#' @param obj The HydroBudget object.
 #' @param input_dd Spatially distributed daily precipitation and mean temperature time series in a single cell.
 #' @return Spatially distributed daily PET
 #'
 #' @keywords internal
-compute_potential_evapotranspiration_cell <- function(input_dd) {
+compute_potential_evapotranspiration_cell <- function(obj, input_dd) {
   round(PE_Oudin(
     JD = yday(as.POSIXct(paste(input_dd$year, input_dd$month, input_dd$day, sep = "-"), format = "%Y-%m-%d")),
     Temp = input_dd$t_mean,
     Lat = unique(input_dd$lat),
-    # the name of the cells is long-lat binded, so the last 3 numbers are the latitude with 1 digit
+    # The name of the cells is long-lat binded, so the last 3 numbers are the latitude with 1 digit
     LatUnit = "deg", TimeStepIn = "daily", TimeStepOut = "daily"
   ), 2)
 }
 
 #' Compute the water budget
 #'
-#' @param calibration The calibration parameters.
+#' @param obj The HydroBudget object.
 #' @param rcn_data The RCN values.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
 #' @param nb_core The number of cores to use in the parallel computations.
 #'
 #' @keywords internal
-compute_water_budget <- function(calibration, rcn_data, climate_data, nb_core) {
+compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
   cluster <- .make_cluster(nb_core)
-  unique_rcn_cell <- unique(rcn_data$cell_ID)
+  unique_rcn_id <- unique(rcn_data$rcn_id)
   j <- 1
-  water_budget <- foreach(j = 1:(length(unique_rcn_cell)), .combine = rbind, .inorder = FALSE) %dopar% {
-    # 1.6.1.1-subsets ####
-    cid <- unique_rcn_cell[j]
+  water_budget <- foreach(j = 1:(length(unique_rcn_id)), .combine = rbind, .inorder = FALSE) %dopar% {
+    # 1.6.1.1-subsets
+    cid <- unique_rcn_id[j]
     # NSE
-    cell_ID <- NULL
-    rcn_subset <- rcn_data[cell_ID == cid]
-    rcn_climate <- merge(rcn_subset, climate_data, by = "climate_cell", all.x = TRUE)
-    rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_cell, rcn_climate$cell_ID, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
-    compute_water_budget_cell(calibration, rcn_climate)
+    rcn_id <- NULL
+    rcn_subset <- rcn_data[rcn_id == cid]
+    rcn_climate <- merge(rcn_subset, climate_data, by = "climate_id", all.x = TRUE)
+    rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_id, rcn_climate$rcn_id, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
+    compute_water_budget_cell(obj, rcn_climate)
   }
   .stop_cluster(cluster)
-  rm(unique_rcn_cell, cluster)
+  rm(unique_rcn_id, cluster)
 
   water_budget
 }
 
 #' Compute the water budget for a single cell
 #'
-#' @param calibration The calibration parameters.
+#' @param obj The HydroBudget object.
 #' @param rcn_climate The RCN values with the climate data (daily total precipitation (mm/d) and average daily temperature (°C)) for a single cell.
 #'
 #' @keywords internal
-compute_water_budget_cell <- function(calibration, rcn_climate) {
+compute_water_budget_cell <- function(obj, rcn_climate) {
   requireNamespace("data.table")
   requireNamespace("zoo")
 
   # calibration parameters
-  F_T <- calibration$F_T
-  t_API <- calibration$t_API
-  f_runoff <- calibration$f_runoff
-  TT_F <- calibration$TT_F
-  sw_m <- calibration$sw_m
-  f_inf <- calibration$f_inf
-  sw_init <- calibration$sw_init
+  F_T <- obj$calibration$F_T
+  t_API <- obj$calibration$t_API
+  f_runoff <- obj$calibration$f_runoff
+  TT_F <- obj$calibration$TT_F
+  sw_m <- obj$calibration$sw_m
+  f_inf <- obj$calibration$f_inf
+  sw_init <- obj$calibration$sw_init
 
-  # 1.6.1.2-Mean temperature function of F_T ####
+  # 1.6.1.2-Mean temperature function of F_T
   roll_mean_freez <- as.numeric(rollmean(as.numeric(rcn_climate$t_mean), F_T, fill = NA, na.pad = T, align = "right"))
   rcn_climate$temp_freez <- ifelse(is.na(roll_mean_freez), rcn_climate$t_mean, roll_mean_freez)
   rm(roll_mean_freez)
 
-  # 1.6.1.3-API computation ####
+  # 1.6.1.3-API computation
   roll_sum_api <- as.numeric(rollsum(rcn_climate$VI, t_API, fill = NA, na.pad = T, align = "right"))
   rcn_climate$api <- ifelse(is.na(roll_sum_api), rcn_climate$VI, roll_sum_api)
   rm(roll_sum_api)
 
-  # 1.6.1.4-RCN variations based on API ####
+  # 1.6.1.4-RCN variations based on API
   RCNII <- unique(rcn_climate$RCNII)
   rcn_api <- data.table(
     "year" = as.numeric(rcn_climate$year),
@@ -334,15 +363,15 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
   rcn_climate$rcn_api <- rcn_api$rcn_api
   rm(rcn_api)
 
-  # 1.6.1.5-Runoff computation ####
+  # 1.6.1.5-Runoff computation
   sat <- (1000 / rcn_climate$rcn_api) - 10 # function from Monfet (1979)
   rcn_climate$runoff <- (rcn_climate$VI - (0.2 * sat))^2 / (rcn_climate$VI + (0.8 * sat)) # function from Monfet (1979)
   rcn_climate$runoff <- ifelse(rcn_climate$VI > (0.2 * sat), rcn_climate$runoff, 0) # function from Monfet (1979)
 
-  # 1.6.1.6-Available water that reaches the soil reservoir ####
+  # 1.6.1.6-Available water that reaches the soil reservoir
   rcn_climate$available_water <- ifelse((rcn_climate$VI - rcn_climate$runoff) < 0, 0, rcn_climate$VI - rcn_climate$runoff)
 
-  # 1.6.1.7- AET and GWR computation ####
+  # 1.6.1.7- AET and GWR computation
   budget1 <- vector()
   gwr <- vector()
   budget2 <- vector()
@@ -373,10 +402,10 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
   rm(ii)
   delta_reservoir <- as.numeric(c(0, diff(budget2)))
 
-  # 1.6.1.8- compute results ####
+  # 1.6.1.8- compute results
   w_b <- data.table(
-    "climate_cell" = as.integer(rcn_climate$climate_cell),
-    "rcn_cell" = as.integer(rcn_climate$ID),
+    "climate_id" = as.integer(rcn_climate$climate_id),
+    "rcn_id" = as.integer(rcn_climate$ID),
     "year" = as.integer(rcn_climate$year),
     "month" = as.integer(rcn_climate$month),
     "day" = as.integer(rcn_climate$day),
@@ -392,7 +421,7 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
     "runoff_2" = as.numeric(runoff_2)
   )
   # NSE
-  VI <- t_mean <- runoff <- pet <- rcn_cell <- NULL
+  VI <- t_mean <- runoff <- pet <- rcn_id <- NULL
   w_b <- w_b[, .(
     VI = sum(VI),
     t_mean = mean(t_mean),
@@ -405,6 +434,6 @@ compute_water_budget_cell <- function(calibration, rcn_climate) {
     delta_reservoir = sum(delta_reservoir)
   ), .(year, month)]
   w_b[, (names(w_b)[3:ncol(w_b)]) := round(get(".SD"), 1), .SDcols = names(w_b)[3:ncol(w_b)]]
-  w_b[, rcn_cell := rcn_climate$cell_ID[1]]
+  w_b[, rcn_id := rcn_climate$rcn_id[1]]
   w_b
 }

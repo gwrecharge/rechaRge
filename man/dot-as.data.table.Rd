@@ -2,11 +2,11 @@
 % Please edit documentation in R/utils.R
 \name{.as.data.table}
 \alias{.as.data.table}
-\title{Make a data.table from input: coerce it or read it (if it is a file path)}
+\title{Make a data.table from input: coerce it or read it (if it is a file path) and ensure column names}
 \usage{
-.as.data.table(input)
+.as.data.table(input, colmap = NULL)
 }
 \description{
-Make a data.table from input: coerce it or read it (if it is a file path)
+Make a data.table from input: coerce it or read it (if it is a file path) and ensure column names
 }
 \keyword{internal}

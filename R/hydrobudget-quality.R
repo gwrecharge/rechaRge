@@ -13,7 +13,7 @@
 #' * **gwr**
 #' * **runoff_2**
 #' * **delta_reservoir**
-#' * **rcn_cell**
+#' * **rcn_id**
 #'
 #' The columns of the observed flow data set input are:
 #' * **year**
@@ -22,14 +22,14 @@
 #' * **one column per station** (named by the station ID), the flow rates in mm/day
 #'
 #' The columns of the RCN gauging stations data set input are:
-#' * **cell_ID**, the cell ID
+#' * **rcn_id**, the cell ID
 #' * **gauging_stat**, the station ID
 #'
 #' The columns of the Lyne and Hollick filter data set input are:
 #' * **station**, the station ID
 #' * **alpha**
 #'
-#' @param obj The HydroBudget object with calibration parameters.
+#' @param obj The HydroBudget object with calibration parameters and column names mappings.
 #' @param water_budget The computed water budget. Input can be a data.frame/data.table or a path to a data file.
 #' @param rcn_gauging The table with the list of RCN cells located in each gauging station watershed. Input can be a data.frame/data.table or a path to a data file.
 #' @param observed_flow The flow rates in mm/day. Input can be a data.frame/data.table or a path to a data file.
@@ -70,7 +70,7 @@
 #' }
 compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging, observed_flow, alpha_lyne_hollick, period = NULL) {
   water_budget_data <- .as.data.table(water_budget)
-  rcn_gauging_data <- .as.data.table(rcn_gauging)
+  rcn_gauging_data <- .as.data.table(rcn_gauging, obj$rcn_gauging_columns)
   year_range <- period
 
   # 1.3-Simulation period ####
@@ -86,10 +86,10 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
   }
 
   # load and filter observed flow
-  observed_flow_ <- .as.data.table(observed_flow)
+  observed_flow_ <- .as.data.table(observed_flow, obj$observed_flow_columns)
   list_year <- seq(year_start, year_end, 1)
   observed_flow_ <- observed_flow_[year %in% list_year]
-  flow <- process_river_flow(observed_flow_, alpha_lyne_hollick)
+  flow <- process_river_flow(obj, observed_flow_, alpha_lyne_hollick)
   observed_flow_month <- flow$observed_flow_month
   gauging <- flow$gauging
 
@@ -115,8 +115,8 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
 
   for (st in 1:length(gauging)) {
     # 1.7.1-load the modeled data per gauging station ####
-    setkey(water_budget_data, cols = "rcn_cell")
-    budget_month <- water_budget_data[.(rcn_gauging_data$cell_ID[which(rcn_gauging_data$gauging_stat == gauging[st])])]
+    setkey(water_budget_data, cols = "rcn_id")
+    budget_month <- water_budget_data[.(rcn_gauging_data$rcn_id[which(rcn_gauging_data$gauging_stat == gauging[st])])]
     budget_month <- na.omit(budget_month, invert = FALSE)
     budget_month <- budget_month[, .(
       VI = mean(get("VI")),
@@ -262,6 +262,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
 #' 2. extract the list of the available gauging stations for the simulation period (list of the names),
 #' 3. compute the Lyne and Hollick baseflow and resample river flow and baseflow with a monthly time step.
 #'
+#' @param obj The HydroBudget object with calibration parameters and column names mappings.
 #' @param observed_flow The flow rates in mm/day. Input can be a data.frame/data.table or a path to a data file.
 #' @param alpha_lyne_hollick The Lyne and Hollick filter. Input can be a data.frame/data.table or a path to a data file.
 #'
@@ -269,10 +270,10 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
 #' @keywords internal
 #'
 #' @importFrom hydrostats baseflows
-process_river_flow <- function(observed_flow, alpha_lyne_hollick) {
+process_river_flow <- function(obj, observed_flow, alpha_lyne_hollick) {
   # 0-Read or coerce input data
-  observed_flow_ <- .as.data.table(observed_flow)
-  alpha_lyne_hollick_ <- .as.data.table(alpha_lyne_hollick)
+  observed_flow_ <- .as.data.table(observed_flow, obj$observed_flow_columns)
+  alpha_lyne_hollick_ <- .as.data.table(alpha_lyne_hollick, obj$alpha_lyne_hollick_columns)
   # TODO check data structures
 
   # 1-Observations data processing ####

@@ -5,10 +5,10 @@
 \title{Determine if precipitation is rain or snow and simulate the snowpack (accumulation
 and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).}
 \usage{
-compute_vertical_inflow(calibration, climate_data, nb_core)
+compute_vertical_inflow(obj, climate_data, nb_core)
 }
 \arguments{
-\item{calibration}{The calibration parameters.}
+\item{obj}{The HydroBudget object.}
 
 \item{climate_data}{The daily total precipitation (mm/d) and average daily temperature (°C).}
 

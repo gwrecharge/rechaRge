@@ -4,9 +4,11 @@
 \alias{process_river_flow}
 \title{River flow processing}
 \usage{
-process_river_flow(observed_flow, alpha_lyne_hollick)
+process_river_flow(obj, observed_flow, alpha_lyne_hollick)
 }
 \arguments{
+\item{obj}{The HydroBudget object with calibration parameters and column names mappings.}
+
 \item{observed_flow}{The flow rates in mm/day. Input can be a data.frame/data.table or a path to a data file.}
 
 \item{alpha_lyne_hollick}{The Lyne and Hollick filter. Input can be a data.frame/data.table or a path to a data file.}

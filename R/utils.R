@@ -1,16 +1,23 @@
-#' Make a data.table from input: coerce it or read it (if it is a file path)
+#' Make a data.table from input: coerce it or read it (if it is a file path) and ensure column names
 #' @keywords internal
 #' @importFrom data.table as.data.table fread
 #' @import R.utils
-.as.data.table <- function(input) {
+.as.data.table <- function(input, colmap = NULL) {
+  rval <- NULL
   if (is.character(input)) {
     if (!file.exists(input)) {
       stop("Data file does not exist: ", input)
     }
-    data.table::fread(input)
+    rval <- data.table::fread(input)
   } else {
-    data.table::as.data.table(input)
+    rval <- data.table::as.data.table(input)
   }
+  if (!is.null(rval) && !is.null(colmap)) {
+    for (col in names(colmap)) {
+      colnames(rval)[colnames(rval) == colmap[[col]]] <- col
+    }
+  }
+  rval
 }
 
 #' Make the computation cluster

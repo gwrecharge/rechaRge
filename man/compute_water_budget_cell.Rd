@@ -4,10 +4,10 @@
 \alias{compute_water_budget_cell}
 \title{Compute the water budget for a single cell}
 \usage{
-compute_water_budget_cell(calibration, rcn_climate)
+compute_water_budget_cell(obj, rcn_climate)
 }
 \arguments{
-\item{calibration}{The calibration parameters.}
+\item{obj}{The HydroBudget object.}
 
 \item{rcn_climate}{The RCN values with the climate data (daily total precipitation (mm/d) and average daily temperature (°C)) for a single cell.}
 }
