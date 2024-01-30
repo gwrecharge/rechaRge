@@ -59,17 +59,17 @@ write_recharge_rasters.hydrobudget <- function(obj, water_budget, input_rcn, crs
   sp::coordinates(runoff) <- ~ x + y
   runoff <- rasterFromXYZ(runoff, crs = crs)
   runoff <- setMinMax(runoff)
-  writeRaster(runoff, filename = file.path(output_dir, "05_interannual_runoff_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
+  writeRaster(runoff, filename = file.path(output_dir, "03_interannual_runoff_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
   
   sp::coordinates(aet) <- ~ x + y
   aet <- rasterFromXYZ(aet, crs = crs)
   aet <- setMinMax(aet)
-  writeRaster(aet, filename = file.path(output_dir, "06_interannual_aet_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
+  writeRaster(aet, filename = file.path(output_dir, "04_interannual_aet_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
   
   sp::coordinates(gwr) <- ~ x + y
   gwr <- rasterFromXYZ(gwr, crs = crs)
   gwr <- setMinMax(gwr)
-  writeRaster(gwr, filename = file.path(output_dir, "07_interannual_gwr_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
+  writeRaster(gwr, filename = file.path(output_dir, "05_interannual_gwr_NAD83.tif"), Format = "GTiff", bylayer = TRUE, overwrite = TRUE)
   
   rm(aet, budget_month_spat, gwr, x_interannual)
 }

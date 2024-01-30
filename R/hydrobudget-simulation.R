@@ -188,8 +188,8 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_co
 #'
 #' @keywords internal
 compute_vertical_inflow <- function(obj, climate_data, nb_core) {
-  # 1.5-execute the snow model and compute Oudin PET
-  # 1.5.1-Parallel loop
+  # Execute the snow model and compute Oudin PET
+  # Parallel loop
   cluster <- .make_cluster(nb_core)
   climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dopar% {
     # NSE
@@ -281,7 +281,7 @@ compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
   unique_rcn_id <- unique(rcn_data$rcn_id)
   j <- 1
   water_budget <- foreach(j = 1:(length(unique_rcn_id)), .combine = rbind, .inorder = FALSE) %dopar% {
-    # 1.6.1.1-subsets
+    # Subsets
     cid <- unique_rcn_id[j]
     # NSE
     rcn_id <- NULL
@@ -315,17 +315,17 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
   f_inf <- obj$calibration$f_inf
   sw_init <- obj$calibration$sw_init
 
-  # 1.6.1.2-Mean temperature function of F_T
+  # Mean temperature function of F_T
   roll_mean_freez <- as.numeric(rollmean(as.numeric(rcn_climate$t_mean), F_T, fill = NA, na.pad = T, align = "right"))
   rcn_climate$temp_freez <- ifelse(is.na(roll_mean_freez), rcn_climate$t_mean, roll_mean_freez)
   rm(roll_mean_freez)
 
-  # 1.6.1.3-API computation
+  # API computation
   roll_sum_api <- as.numeric(rollsum(rcn_climate$VI, t_API, fill = NA, na.pad = T, align = "right"))
   rcn_climate$api <- ifelse(is.na(roll_sum_api), rcn_climate$VI, roll_sum_api)
   rm(roll_sum_api)
 
-  # 1.6.1.4-RCN variations based on API
+  # RCN variations based on API
   RCNII <- unique(rcn_climate$RCNII)
   rcn_api <- data.table(
     "year" = as.numeric(rcn_climate$year),
@@ -363,15 +363,15 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
   rcn_climate$rcn_api <- rcn_api$rcn_api
   rm(rcn_api)
 
-  # 1.6.1.5-Runoff computation
+  # Runoff computation
   sat <- (1000 / rcn_climate$rcn_api) - 10 # function from Monfet (1979)
   rcn_climate$runoff <- (rcn_climate$VI - (0.2 * sat))^2 / (rcn_climate$VI + (0.8 * sat)) # function from Monfet (1979)
   rcn_climate$runoff <- ifelse(rcn_climate$VI > (0.2 * sat), rcn_climate$runoff, 0) # function from Monfet (1979)
 
-  # 1.6.1.6-Available water that reaches the soil reservoir
+  # Available water that reaches the soil reservoir
   rcn_climate$available_water <- ifelse((rcn_climate$VI - rcn_climate$runoff) < 0, 0, rcn_climate$VI - rcn_climate$runoff)
 
-  # 1.6.1.7- AET and GWR computation
+  # AET and GWR computation
   budget1 <- vector()
   gwr <- vector()
   budget2 <- vector()
@@ -402,7 +402,7 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
   rm(ii)
   delta_reservoir <- as.numeric(c(0, diff(budget2)))
 
-  # 1.6.1.8- compute results
+  # Compute results
   w_b <- data.table(
     "climate_id" = as.integer(rcn_climate$climate_id),
     "rcn_id" = as.integer(rcn_climate$ID),
