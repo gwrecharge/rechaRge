@@ -4,10 +4,10 @@
 \alias{compute_water_budget}
 \title{Compute the water budget}
 \usage{
-compute_water_budget(calibration, rcn_data, climate_data, nb_core)
+compute_water_budget(obj, rcn_data, climate_data, nb_core)
 }
 \arguments{
-\item{calibration}{The calibration parameters.}
+\item{obj}{The HydroBudget object.}
 
 \item{rcn_data}{The RCN values.}
 

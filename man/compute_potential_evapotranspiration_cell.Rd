@@ -4,9 +4,11 @@
 \alias{compute_potential_evapotranspiration_cell}
 \title{Compute PET based on the Oudin formula}
 \usage{
-compute_potential_evapotranspiration_cell(input_dd)
+compute_potential_evapotranspiration_cell(obj, input_dd)
 }
 \arguments{
+\item{obj}{The HydroBudget object.}
+
 \item{input_dd}{Spatially distributed daily precipitation and mean temperature time series in a single cell.}
 }
 \value{

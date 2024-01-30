@@ -1,4 +1,4 @@
-year,month,VI,t_mean,runoff,pet,aet,gwr,runoff_2,delta_reservoir,rcn_cell
+year,month,VI,t_mean,runoff,pet,aet,gwr,runoff_2,delta_reservoir,rcn_id
 2010,1,28,-7.7,21.2,1.6,1.6,10.2,0,-4.9,79402
 2010,2,11.9,-6.2,0.8,4.1,4.1,8.1,0,-1.1,79402
 2010,3,88.6,0.7,42.4,18.7,18.7,12.4,0,15.1,79402

@@ -4,10 +4,10 @@
 \alias{compute_vertical_inflow_cell}
 \title{Compute the vertical inflow and the potential evapotranspiration (PET) for a single cell}
 \usage{
-compute_vertical_inflow_cell(calibration, input_dd)
+compute_vertical_inflow_cell(obj, input_dd)
 }
 \arguments{
-\item{calibration}{The calibration parameters.}
+\item{obj}{The HydroBudget object.}
 
 \item{input_dd}{Spatially distributed daily precipitation and mean temperature time series in a single cell.}
 }

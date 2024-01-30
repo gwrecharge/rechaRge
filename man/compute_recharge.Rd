@@ -40,16 +40,16 @@ precipitation and temperature as well as distributed data of pedology, land cove
 \details{
 The expected columns for the RCN data set input are:
 \itemize{
-\item \strong{climate_cell}
-\item \strong{cell_ID}, the cell ID
+\item \strong{climate_id} the climate cell ID
+\item \strong{rcn_id}, the RCN cell ID
 \item \strong{RCNII}
-\item \strong{X_L93}
-\item \strong{Y_L93}
+\item \strong{lon}
+\item \strong{lat}
 }
 
 The expected columns for the climate data set input are:
 \itemize{
-\item \strong{climate_cell}
+\item \strong{climate_id}
 \item \strong{day}
 \item \strong{month}
 \item \strong{year}
@@ -70,7 +70,7 @@ The columns of the water budget data set output are:
 \item \strong{gwr}
 \item \strong{runoff_2}
 \item \strong{delta_reservoir}
-\item \strong{rcn_cell}
+\item \strong{rcn_id}
 }
 }
 \examples{

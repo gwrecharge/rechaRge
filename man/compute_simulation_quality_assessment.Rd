@@ -14,7 +14,7 @@ compute_simulation_quality_assessment(
 )
 }
 \arguments{
-\item{obj}{The HydroBudget object with calibration parameters.}
+\item{obj}{The HydroBudget object with calibration parameters and column names mappings.}
 
 \item{water_budget}{The computed water budget. Input can be a data.frame/data.table or a path to a data file.}
 
@@ -42,7 +42,7 @@ The columns of the water budget data set input are:
 \item \strong{gwr}
 \item \strong{runoff_2}
 \item \strong{delta_reservoir}
-\item \strong{rcn_cell}
+\item \strong{rcn_id}
 }
 
 The columns of the observed flow data set input are:
@@ -55,7 +55,7 @@ The columns of the observed flow data set input are:
 
 The columns of the RCN gauging stations data set input are:
 \itemize{
-\item \strong{cell_ID}, the cell ID
+\item \strong{rcn_id}, the cell ID
 \item \strong{gauging_stat}, the station ID
 }
 

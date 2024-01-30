@@ -21,3 +21,4 @@
 simulation_HydroBudget*
 ^\.github$
 ^Makefile$
+^community_survey$
