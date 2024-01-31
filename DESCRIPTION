@@ -32,7 +32,8 @@ Imports:
     zoo,
     R.utils
 Suggests: 
-    testthat (>= 3.0.0)
+    testthat (>= 3.0.0),
+    curl
 URL: https://github.com/gwrecharge/rechaRge/,
     https://hess.copernicus.org/articles/25/6567/2021/,
     https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/EUDV3H

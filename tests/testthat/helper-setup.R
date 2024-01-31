@@ -1,9 +1,9 @@
 load_example_datasets <- function() {
-  examples_dir <- system.file("examples", package="rechaRge")
-  input_rcn <- file.path(examples_dir, "input", "rcn.csv.gz")
-  input_climate <- file.path(examples_dir, "input", "climate.csv.gz")
-  input_rcn_climate <- file.path(examples_dir, "input", "rcn_climate.csv.gz")
-  input_rcn_gauging <- file.path(examples_dir, "input", "rcn_gauging.csv.gz")
+  base_url <- "https://github.com/gwrecharge/rechaRge-book/raw/main/examples/input/"
+  input_rcn <- paste0(base_url, "rcn.csv.gz")
+  input_climate <- paste0(base_url, "climate.csv.gz")
+  input_rcn_climate <- paste0(base_url, "rcn_climate.csv.gz")
+  input_rcn_gauging <- paste0(base_url, "rcn_gauging.csv.gz")
   list(
     input_rcn = data.table::fread(input_rcn),
     input_climate = data.table::fread(input_climate),

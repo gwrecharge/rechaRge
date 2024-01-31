@@ -41,9 +41,10 @@
 #' @examples
 #' \dontrun{
 #' # Use input example files provided by the package
-#' examples_dir <- system.file("examples", package = "rechaRge")
-#' observed_flow <- file.path(examples_dir, "input", "observed_flow.csv.gz") # flow rates in mm/d
-#' alpha_lyne_hollick <- file.path(examples_dir, "input", "alpha_lyne_hollick.csv.gz")
+#' base_url <- "https://github.com/gwrecharge/rechaRge-book/raw/main/examples/input/"
+#' input_rcn_gauging <- paste0(base_url, "rcn_gauging.csv.gz")
+#' input_observed_flow <- paste0(base_url, "observed_flow.csv.gz")
+#' input_alpha_lyne_hollick <- paste0(base_url, "alpha_lyne_hollick.csv.gz")
 #'
 #' # Calibration parameters
 #' HB <- rechaRge::new_hydrobudget(
@@ -63,8 +64,8 @@
 #'   HB,
 #'   water_budget = water_budget,
 #'   rcn_gauging = input_rcn_gauging,
-#'   observed_flow = observed_flow,
-#'   alpha_lyne_hollick = alpha_lyne_hollick,
+#'   observed_flow = input_observed_flow,
+#'   alpha_lyne_hollick = input_alpha_lyne_hollick,
 #'   period = simul_period
 #' )
 #' }

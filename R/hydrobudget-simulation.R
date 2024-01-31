@@ -95,13 +95,10 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' @examples
 #' \dontrun{
 #' # Use input example files provided by the package
-#' examples_dir <- system.file("examples", package = "rechaRge")
-#' input_rcn <- file.path(examples_dir, "input", "rcn.csv.gz")
-#' input_climate <- file.path(
-#'   examples_dir, "input",
-#'   "climate.csv.gz"
-#' )
-#' input_rcn_climate <- file.path(examples_dir, "input", "rcn_climate.csv.gz")
+#' base_url <- "https://github.com/gwrecharge/rechaRge-book/raw/main/examples/input/"
+#' input_rcn <- paste0(base_url, "rcn.csv.gz")
+#' input_climate <- paste0(base_url, "climate.csv.gz")
+#' input_rcn_climate <- paste0(base_url, "rcn_climate.csv.gz")
 #'
 #' # Calibration parameters
 #' HB <- rechaRge::new_hydrobudget(
