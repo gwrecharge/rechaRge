@@ -4,20 +4,23 @@
 #' Performs a simulation of water recharge using a specific model. 
 #'
 #' The expected columns for the RCN data set input are:
-#' * **climate_id** the climate cell ID
 #' * **rcn_id**, the RCN cell ID
 #' * **RCNII**
 #' * **lon**
 #' * **lat**
 #'
 #' The expected columns for the climate data set input are:
-#' * **climate_id**
+#' * **climate_id** the climate cell ID
 #' * **day**
 #' * **month**
 #' * **year**
 #' * **t_mean**
 #' * **p_tot**
 #' * **lat**
+#' 
+#' The expected columns for the RCN-climate data set input are:
+#' * **climate_id** the climate cell ID
+#' * **rcn_id**, the RCN cell ID
 #' 
 #' The columns of the water budget data set output are:
 #' * **year**
@@ -35,6 +38,7 @@
 #' @param obj The recharge object.
 #' @param rcn The RCN values. Input can be a data.frame/data.table or a path to a data file.
 #' @param climate The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.
+#' @param rcn_climate The relation between the RCN and climate cells. Input can be a data.frame/data.table or a path to a data file.
 #' @param period The start and end years. If not provided, the start/end years will be extracted from the climate data.
 #' @param nb_core The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.
 #' @param ... Other arguments passed to methods
@@ -42,14 +46,14 @@
 #' @return The water budget
 #' @rdname compute_recharge
 #' @export
-compute_recharge <- function(obj, rcn, climate, period = NULL, nb_core = NULL, ...) {
+compute_recharge <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = NULL, ...) {
   UseMethod("compute_recharge")
 }
 
 #' @rdname compute_recharge
 #' @method compute_recharge default
 #' @export
-compute_recharge.default <- function(obj, rcn, climate, period = NULL, nb_core = NULL, ...) {
+compute_recharge.default <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = NULL, ...) {
   cat("The compute recharge function has no default model\n")
 }
 

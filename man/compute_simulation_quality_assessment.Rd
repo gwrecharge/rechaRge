@@ -56,12 +56,12 @@ The columns of the observed flow data set input are:
 The columns of the RCN gauging stations data set input are:
 \itemize{
 \item \strong{rcn_id}, the cell ID
-\item \strong{gauging_stat}, the station ID
+\item \strong{station_id}, the station ID
 }
 
 The columns of the Lyne and Hollick filter data set input are:
 \itemize{
-\item \strong{station}, the station ID
+\item \strong{station_id}, the station ID
 \item \strong{alpha}
 }
 }

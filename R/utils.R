@@ -5,7 +5,7 @@
 .as.data.table <- function(input, colmap = NULL) {
   rval <- NULL
   if (is.character(input)) {
-    if (!file.exists(input)) {
+    if (!startsWith(input, "http") && !file.exists(input)) {
       stop("Data file does not exist: ", input)
     }
     rval <- data.table::fread(input)

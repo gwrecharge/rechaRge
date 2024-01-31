@@ -6,11 +6,35 @@
 \alias{compute_recharge.hydrobudget}
 \title{Simulation using a recharge model}
 \usage{
-compute_recharge(obj, rcn, climate, period = NULL, nb_core = NULL, ...)
+compute_recharge(
+  obj,
+  rcn,
+  climate,
+  rcn_climate,
+  period = NULL,
+  nb_core = NULL,
+  ...
+)
 
-\method{compute_recharge}{default}(obj, rcn, climate, period = NULL, nb_core = NULL, ...)
+\method{compute_recharge}{default}(
+  obj,
+  rcn,
+  climate,
+  rcn_climate,
+  period = NULL,
+  nb_core = NULL,
+  ...
+)
 
-\method{compute_recharge}{hydrobudget}(obj, rcn, climate, period = NULL, nb_core = NULL, ...)
+\method{compute_recharge}{hydrobudget}(
+  obj,
+  rcn,
+  climate,
+  rcn_climate,
+  period = NULL,
+  nb_core = NULL,
+  ...
+)
 }
 \arguments{
 \item{obj}{The recharge object.}
@@ -18,6 +42,8 @@ compute_recharge(obj, rcn, climate, period = NULL, nb_core = NULL, ...)
 \item{rcn}{The RCN values. Input can be a data.frame/data.table or a path to a data file.}
 
 \item{climate}{The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.}
+
+\item{rcn_climate}{The relation between the RCN and climate cells. Input can be a data.frame/data.table or a path to a data file.}
 
 \item{period}{The start and end years. If not provided, the start/end years will be extracted from the climate data.}
 
@@ -40,7 +66,6 @@ precipitation and temperature as well as distributed data of pedology, land cove
 \details{
 The expected columns for the RCN data set input are:
 \itemize{
-\item \strong{climate_id} the climate cell ID
 \item \strong{rcn_id}, the RCN cell ID
 \item \strong{RCNII}
 \item \strong{lon}
@@ -49,13 +74,19 @@ The expected columns for the RCN data set input are:
 
 The expected columns for the climate data set input are:
 \itemize{
-\item \strong{climate_id}
+\item \strong{climate_id} the climate cell ID
 \item \strong{day}
 \item \strong{month}
 \item \strong{year}
 \item \strong{t_mean}
 \item \strong{p_tot}
 \item \strong{lat}
+}
+
+The expected columns for the RCN-climate data set input are:
+\itemize{
+\item \strong{climate_id} the climate cell ID
+\item \strong{rcn_id}, the RCN cell ID
 }
 
 The columns of the water budget data set output are:
@@ -77,11 +108,12 @@ The columns of the water budget data set output are:
 \dontrun{
 # Use input example files provided by the package
 examples_dir <- system.file("examples", package = "rechaRge")
-input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
+input_rcn <- file.path(examples_dir, "input", "rcn.csv.gz")
 input_climate <- file.path(
   examples_dir, "input",
-  "input_climate.csv.gz"
-) # precipitation total in mm/d
+  "climate.csv.gz"
+)
+input_rcn_climate <- file.path(examples_dir, "input", "rcn_climate.csv.gz")
 
 # Calibration parameters
 HB <- rechaRge::new_hydrobudget(
@@ -106,6 +138,7 @@ water_budget <- rechaRge::compute_recharge(
   HB,
   rcn = input_rcn,
   climate = input_climate,
+  rcn_climate = input_rcn_climate,
   period = simul_period
   # nb_core = nb_core
 )

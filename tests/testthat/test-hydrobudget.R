@@ -10,6 +10,7 @@ test_that("Water budget computation for a single cell", {
     hb,
     rcn = input_rcn,
     climate = df$input_climate,
+    rcn_climate = df$input_rcn_climate,
     period = simul_period,
     nb_core = 1
   )

@@ -23,10 +23,10 @@
 #'
 #' The columns of the RCN gauging stations data set input are:
 #' * **rcn_id**, the cell ID
-#' * **gauging_stat**, the station ID
+#' * **station_id**, the station ID
 #'
 #' The columns of the Lyne and Hollick filter data set input are:
-#' * **station**, the station ID
+#' * **station_id**, the station ID
 #' * **alpha**
 #'
 #' @param obj The HydroBudget object with calibration parameters and column names mappings.
@@ -116,7 +116,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
   for (st in 1:length(gauging)) {
     # Load the modeled data per gauging station
     setkey(water_budget_data, cols = "rcn_id")
-    budget_month <- water_budget_data[.(rcn_gauging_data$rcn_id[which(rcn_gauging_data$gauging_stat == gauging[st])])]
+    budget_month <- water_budget_data[.(rcn_gauging_data$rcn_id[which(rcn_gauging_data$station_id == gauging[st])])]
     budget_month <- na.omit(budget_month, invert = FALSE)
     budget_month <- budget_month[, .(
       VI = mean(get("VI")),
@@ -128,12 +128,12 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
       runoff_2 = mean(get("runoff_2")),
       delta_reservoir = mean(get("delta_reservoir"))
     ), .(year, month)]
-    budget_month$gauging_stat <- gauging[st]
+    budget_month$station_id <- gauging[st]
 
     # Create the comparison data frame
     cols <- which(colnames(observed_flow_month) %in% c(
-      "year", "month", as.character(unique(budget_month$gauging_stat)),
-      paste(as.character(unique(budget_month$gauging_stat)), "_bf", sep = "")
+      "year", "month", as.character(unique(budget_month$station_id)),
+      paste(as.character(unique(budget_month$station_id)), "_bf", sep = "")
     ))
     comparison_month <- merge(observed_flow_month[, cols, with = FALSE],
       budget_month[, 1:(ncol(budget_month) - 1), with = FALSE],
@@ -193,7 +193,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
     # Write the simulation metadata in a datatable and save it
     if (st == 1) {
       simulation_metadata <- data.table(
-        gauging_stat = unique(budget_month$gauging_stat),
+        station_id = unique(budget_month$station_id),
         cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
         T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
         f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
@@ -218,7 +218,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
       simulation_metadata <- rbind(
         simulation_metadata,
         data.table(
-          gauging_stat = unique(budget_month$gauging_stat),
+          station_id = unique(budget_month$station_id),
           cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
           T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
           f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
