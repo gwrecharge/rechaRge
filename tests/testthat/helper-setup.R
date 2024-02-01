@@ -1,4 +1,4 @@
-load_example_datasets <- function() {
+load_example_remote_datasets <- function() {
   base_url <- "https://github.com/gwrecharge/rechaRge-book/raw/main/examples/input/"
   list(
     rcn = paste0(base_url, "rcn.csv.gz"),
@@ -9,6 +9,17 @@ load_example_datasets <- function() {
     alpha_lyne_hollick = paste0(base_url, "alpha_lyne_hollick.csv.gz")
   )
 }
+
+load_example_local_datasets <- function() {
+  list(
+    rcn = file.path("data", "rcn_79402.csv.gz"),
+    climate = file.path("data", "climate_1.csv.gz"),
+    rcn_climate = file.path("data", "rcn_79402_climate_1.csv.gz"),
+    observed_flow = file.path("data", "observed_flow.csv.gz"),
+    alpha_lyne_hollick = file.path("data", "alpha_lyne_hollick.csv.gz")
+  )
+}
+
 
 load_hydrobudget <- function() {
   HB <- new_hydrobugdet(

@@ -1,26 +1,24 @@
 test_that("Water budget computation for a single cell", {
-  df <- load_example_datasets()
+  df <- load_example_local_datasets()
   hb <- load_hydrobudget()
 
-  cell_id <- 79402
-  input_rcn <- data.table::fread(df$rcn)[cell_ID == cell_id]
   simul_period <- c(2010, 2010)
 
   wb <- rechaRge::compute_recharge(
     hb,
-    rcn = input_rcn,
+    rcn = df$rcn,
     climate = df$climate,
     rcn_climate = df$rcn_climate,
     period = simul_period,
     nb_core = 1
   )
 
-  wb_expected <- data.table::fread(file.path("data", paste0("water_budget_", cell_id,".csv")))
+  wb_expected <- data.table::fread(file.path("data", "water_budget_79402.csv"))
   expect_true(all.equal(wb, wb_expected))
 })
 
-test_that("Water budget river flow processing", {
-  df <- load_example_datasets()
+test_that("River flow processing", {
+  df <- load_example_local_datasets()
   hb <- load_hydrobudget()
 
   flow <- rechaRge:::process_river_flow(
