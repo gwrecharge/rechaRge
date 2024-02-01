@@ -51,7 +51,7 @@ write_recharge_rasters.hydrobudget <- function(obj, water_budget, input_rcn, crs
                                              aet = mean(get("aet")),
                                              gwr = mean(get("gwr"))), .(rcn_id = get("rcn_id"))]
   rcn <- rcn[which(!duplicated(rcn$rcn_id)), ]
-  x_interannual <- merge(budget_month_spat, rcn[, c(2, 4, 5)], by.x = "rcn_id", by.y = "rcn_id")
+  x_interannual <- merge(budget_month_spat, rcn[, c("rcn_id", "lon", "lat")], by.x = "rcn_id", by.y = "rcn_id")
   runoff <- x_interannual[, .(x = get("lon"), y = get("lat"), z = runoff)]
   aet <- x_interannual[, .(x = get("lon"), y = get("lat"), z = aet)]
   gwr <- x_interannual[, .(x = get("lon"), y = get("lat"), z = gwr)]

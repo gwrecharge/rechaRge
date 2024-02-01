@@ -36,15 +36,10 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
       sw_init = 50
     ),
     rcn_columns = list(
-      climate_id = "climate_id",
       rcn_id = "rcn_id",
       RCNII = "RCNII",
       lon = "lon",
       lat = "lat"
-    ),
-    rcn_gauging_columns = list(
-      rcn_id = "rcn_id",
-      gauging_stat = "gauging_stat"
     ),
     climate_columns = list(
       climate_id = "climate_id",
@@ -55,13 +50,21 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
       p_tot = "p_tot",
       lat = "lat"
     ),
+    rcn_climate_columns = list(
+      climate_id = "climate_id",
+      rcn_id = "rcn_id"
+    ),
+    rcn_gauging_columns = list(
+      rcn_id = "rcn_id",
+      station_id = "station_id"
+    ),
     observed_flow_columns = list(
       day = "day",
       month = "month",
       year = "year"
     ),
     alpha_lyne_hollick_columns = list(
-      station = "station",
+      station_id = "station_id",
       alpha = "alpha"
     )
   ), class = "hydrobudget")
@@ -92,12 +95,10 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' @examples
 #' \dontrun{
 #' # Use input example files provided by the package
-#' examples_dir <- system.file("examples", package = "rechaRge")
-#' input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
-#' input_climate <- file.path(
-#'   examples_dir, "input",
-#'   "input_climate.csv.gz"
-#' ) # precipitation total in mm/d
+#' base_url <- "https://github.com/gwrecharge/rechaRge-book/raw/main/examples/input/"
+#' input_rcn <- paste0(base_url, "rcn.csv.gz")
+#' input_climate <- paste0(base_url, "climate.csv.gz")
+#' input_rcn_climate <- paste0(base_url, "rcn_climate.csv.gz")
 #'
 #' # Calibration parameters
 #' HB <- rechaRge::new_hydrobudget(
@@ -122,22 +123,25 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #'   HB,
 #'   rcn = input_rcn,
 #'   climate = input_climate,
+#'   rcn_climate = input_rcn_climate,
 #'   period = simul_period
 #'   # nb_core = nb_core
 #' )
 #' head(water_budget)
 #' }
-compute_recharge.hydrobudget <- function(obj, rcn, climate, period = NULL, nb_core = NULL, ...) {
+compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = NULL, ...) {
   gc()
   pb <- .newProgress(total = 4)
 
   # Load the input data and ensure expected column names 
-  .updateProgress(pb, step = 1, total = 4, tokens = list(what = "Checking input data..."))
   rcn_data <- .as.data.table(rcn, obj$rcn_columns)
   climate_data <- .as.data.table(climate, obj$climate_columns)
+  rcn_climate_data <- .as.data.table(rcn_climate, obj$rcn_climate_columns)
+  rcn_data <- merge(rcn_data, rcn_climate_data, all = FALSE)
   year_range <- period
   nb_core <- nb_core
 
+  .updateProgress(pb, step = 1, total = 4, tokens = list(what = "Checking input data..."))
   # Simulation period
   if (is.null(year_range)) {
     year_range <- c(min(climate_data$year), max(climate_data$year))

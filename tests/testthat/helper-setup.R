@@ -1,12 +1,14 @@
 load_example_datasets <- function() {
-  examples_dir <- system.file("examples", package="rechaRge")
-  input_rcn <- file.path(examples_dir, "input", "input_rcn.csv.gz")
-  input_climate <- file.path(examples_dir, "input", "input_climate.csv.gz") # precipitation total in mm/d
-  input_rcn_gauging <- file.path(examples_dir, "input", "input_rcn_gauging.csv.gz")
+  base_url <- "https://github.com/gwrecharge/rechaRge-book/raw/main/examples/input/"
+  input_rcn <- paste0(base_url, "rcn.csv.gz")
+  input_climate <- paste0(base_url, "climate.csv.gz")
+  input_rcn_climate <- paste0(base_url, "rcn_climate.csv.gz")
+  input_rcn_gauging <- paste0(base_url, "rcn_gauging.csv.gz")
   list(
     input_rcn = data.table::fread(input_rcn),
-    input_rcn_gauging = data.table::fread(input_rcn_gauging),
-    input_climate = data.table::fread(input_climate)
+    input_climate = data.table::fread(input_climate),
+    input_rcn_climate = data.table::fread(input_rcn_climate),
+    input_rcn_gauging = data.table::fread(input_rcn_gauging)
   )
 }
 
@@ -29,5 +31,9 @@ load_hydrobudget <- function() {
     lat = "Y_L93"
   )
   HB$climate_columns$climate_id <- "climate_cell"
+  HB$rcn_climate_columns <- list(
+    climate_id = "climate_cell",
+    rcn_id = "cell_ID"
+  )
   HB
 }
