@@ -284,15 +284,26 @@ process_river_flow <- function(obj, observed_flow, alpha_lyne_hollick) {
     stop("error - no observed data on the simulation period")
   }
 
-  for (c in 4:ncol(observed_flow_no_na)) {
-    observed_flow_no_na[[c]][2:(nrow(observed_flow_no_na) - 1)] <- zoo::na.approx(observed_flow_no_na[[c]][2:(nrow(observed_flow_no_na) - 1)],
+  # Station IDs are the unknown columns
+  get_station_ids <- function(flw) {
+    station_ids <- colnames(observed_flow_no_na)
+    station_ids[!(station_ids %in% c("year", "month", "day", "date"))]
+  }
+  station_ids <- get_station_ids(observed_flow_no_na)
+
+  row_count <- nrow(observed_flow_no_na) - 1
+  for (station_id in station_ids) {
+    observed_flow_no_na[[station_id]][2:row_count] <- zoo::na.approx(observed_flow_no_na[[station_id]][2:row_count],
       maxgap = 5, na.rm = FALSE
     )
   } # Fill up the gap in the observed flow up to 5 days
+
+  # Add date column and move it to 1st position
   observed_flow_no_na$date <- as.POSIXct(paste(observed_flow_no_na$year, observed_flow_no_na$month, observed_flow_no_na$day, sep = "-"),
     format = "%Y-%m-%d", tz = "UTC"
   )
-  observed_flow_no_na <- observed_flow_no_na[, c(ncol(observed_flow_no_na), 1:3, 4:(ncol(observed_flow_no_na) - 1)), with = FALSE]
+  observed_flow_no_na <- observed_flow_no_na[, c(ncol(observed_flow_no_na), 1:(ncol(observed_flow_no_na) - 1)), with = FALSE]
+
   observed_flow_month <- data.table::data.table(
     year = c(rep(unique(observed_flow_no_na$year), each = 12)),
     month = c(rep(c(1:12), length(unique(observed_flow_no_na$year))))
@@ -300,7 +311,9 @@ process_river_flow <- function(obj, observed_flow, alpha_lyne_hollick) {
 
   # List of the available gauging station for the simulation period
   if (ncol(observed_flow_no_na) > 4) {
-    gauging <- as.numeric(colnames(observed_flow_no_na)[5:ncol(observed_flow_no_na)])
+    station_ids <- get_station_ids(observed_flow_no_na)
+    # FIXME why numeric ID?
+    gauging <- as.numeric(station_ids)
   }
 
   # Compute baseflow with Lyne and Hollick (alpha calibrated independently)
@@ -308,18 +321,17 @@ process_river_flow <- function(obj, observed_flow, alpha_lyne_hollick) {
     stop("error - no observed river flow on the simulation period - baseflow computation impossible")
   }
 
-  for (c in 5:ncol(observed_flow_no_na)) {
-    # c<-5
-    bf <- observed_flow_no_na[, c(1:3, c), with = FALSE]
+  for (station_id in station_ids) {
+    bf <- observed_flow_no_na[, c("date", "year", "month", station_id), with = FALSE]
     bf <- na.contiguous(bf) # select the longest period without NA
     colnames(bf) <- c("Date", "year", "month", "Q")
     bf$bf_lh <- baseflows(bf[, c(1, 4), with = FALSE],
-      alpha_lyne_hollick_$alpha[which(alpha_lyne_hollick_$station == colnames(observed_flow_no_na)[c])],
+      alpha_lyne_hollick_$alpha[which(alpha_lyne_hollick_$station == station_id)],
       n.reflected = 30, ts = "daily"
     )[, 3]
     q_month <- bf[, .(qmonth = sum(get("Q"), na.rm = TRUE),
                       bf_lh_month = sum(get("bf_lh"), na.rm = TRUE)), .(year, month)]
-    colnames(q_month)[3:4] <- c(colnames(observed_flow_no_na)[c], paste(colnames(observed_flow_no_na)[c], "_bf", sep = ""))
+    colnames(q_month)[3:4] <- c(station_id, paste(station_id, "_bf", sep = ""))
     observed_flow_month <- merge(observed_flow_month, q_month, by = c("year", "month"), all.x = TRUE)
   }
 

@@ -1,14 +1,12 @@
 load_example_datasets <- function() {
   base_url <- "https://github.com/gwrecharge/rechaRge-book/raw/main/examples/input/"
-  input_rcn <- paste0(base_url, "rcn.csv.gz")
-  input_climate <- paste0(base_url, "climate.csv.gz")
-  input_rcn_climate <- paste0(base_url, "rcn_climate.csv.gz")
-  input_rcn_gauging <- paste0(base_url, "rcn_gauging.csv.gz")
   list(
-    input_rcn = data.table::fread(input_rcn),
-    input_climate = data.table::fread(input_climate),
-    input_rcn_climate = data.table::fread(input_rcn_climate),
-    input_rcn_gauging = data.table::fread(input_rcn_gauging)
+    rcn = paste0(base_url, "rcn.csv.gz"),
+    climate = paste0(base_url, "climate.csv.gz"),
+    rcn_climate = paste0(base_url, "rcn_climate.csv.gz"),
+    rcn_gauging = paste0(base_url, "rcn_gauging.csv.gz"),
+    observed_flow = paste0(base_url, "observed_flow.csv.gz"),
+    alpha_lyne_hollick = paste0(base_url, "alpha_lyne_hollick.csv.gz")
   )
 }
 
