@@ -14,7 +14,7 @@
 #' @param sw_m The maximum soil water content (mm)
 #' @param f_inf The infiltration factor (-)
 #'
-#' @return
+#' @return An object of class hydrobudget
 #' @export
 new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
   # TODO some sanity checks with the calibration values
