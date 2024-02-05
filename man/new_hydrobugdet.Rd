@@ -23,6 +23,9 @@ new_hydrobugdet(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf)
 
 \item{f_inf}{The infiltration factor (-)}
 }
+\value{
+An object of class hydrobudget
+}
 \description{
 Make a new HydroBudget object, by providing the calibration parameters for the
 model computation.

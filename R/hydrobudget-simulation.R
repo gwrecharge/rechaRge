@@ -14,7 +14,7 @@
 #' @param sw_m The maximum soil water content (mm)
 #' @param f_inf The infiltration factor (-)
 #'
-#' @return
+#' @return An object of class hydrobudget
 #' @export
 new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
   # TODO some sanity checks with the calibration values
@@ -133,7 +133,7 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   gc()
   pb <- .newProgress(total = 4)
 
-  # Load the input data and ensure expected column names 
+  # Load the input data and ensure expected column names
   rcn_data <- .as.data.table(rcn, obj$rcn_columns)
   climate_data <- .as.data.table(climate, obj$climate_columns)
   rcn_climate_data <- .as.data.table(rcn_climate, obj$rcn_climate_columns)
@@ -207,7 +207,7 @@ compute_vertical_inflow <- function(obj, climate_data, nb_core) {
 
   # Compute vertical inflow (VI)
   climate_data_VI$VI <- climate_data_VI$rain + climate_data_VI$melt
-  climate_data_VI[, c(1:6, 14, 13)]
+  climate_data_VI[, c("climate_id", "day", "month", "year", "t_mean", "p_tot", "VI", "PET")]
 }
 
 #' Compute the vertical inflow and the potential evapotranspiration (PET) for a single cell
