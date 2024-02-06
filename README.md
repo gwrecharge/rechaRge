@@ -1,8 +1,6 @@
 # rechaRge [![CRAN status](https://www.r-pkg.org/badges/version/rechaRge)](https://CRAN.R-project.org/package=rechaRge) [![R-CMD-check](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml)
 
-> A survey was launched in order to understand needs and expectations of the potential users of the package. Feedback, suggestions, and ideas can be shared here: [https://redcap.link/rechaRge_in_R](https://redcap.link/rechaRge_in_R)
-> 
-> Let us know your thoughts and suggestions! Please take a few minutes to answer our 18 questions in this survey (about 5 min to fulfill the survey). Feel free to share it too! 
+> The results of the survey used to assess the community expectations regarding this package are presented here: https://github.com/gwrecharge/rechaRge/blob/main/community_survey/survey_main_results.md 
 
 ## Installation
 
