@@ -10,7 +10,17 @@ write_recharge_results(obj, water_budget, output_dir = getwd(), ...)
 
 \method{write_recharge_results}{default}(obj, water_budget, output_dir = getwd(), ...)
 
-\method{write_recharge_results}{hydrobudget}(obj, water_budget, output_dir = getwd(), ...)
+\method{write_recharge_results}{hydrobudget}(
+  obj,
+  water_budget,
+  output_dir = getwd(),
+  format = "csv",
+  input_rcn = NULL,
+  names = list(x = list(longname = "Longitude", unit = "deg"), y = list(longname =
+    "Lattitude", unit = "deg"), time = list(longname =
+    "Month since start of the water budget", unit = "month")),
+  ...
+)
 }
 \arguments{
 \item{obj}{The recharge object.}
@@ -20,7 +30,15 @@ write_recharge_results(obj, water_budget, output_dir = getwd(), ...)
 \item{output_dir}{The output directory where result files will be written. Default is current working directory.}
 
 \item{...}{Other arguments passed to methods}
+
+\item{format}{The file output format. Use "nc" for NetCDF format. Default is "csv".}
+
+\item{input_rcn}{The RCN values. Input can be a data.frame/data.table or a path to a data file.}
+
+\item{names}{The long names and units of the NetCDF dimensions.}
 }
 \description{
 Export water budget.
+
+Supported formats are "csv" (default) or "nc" (NetCDF).
 }
