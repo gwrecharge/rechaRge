@@ -121,12 +121,12 @@ write_recharge_results.hydrobudget <-
                           force_v4 = TRUE)
 
 
-      #Additional attributes into dimension and data variables
+      # Additional attributes into dimension and data variables
       ncatt_put(hb_sim,"x","axis","Longitude")
       ncatt_put(hb_sim,"y","axis","Lattitude")
       ncatt_put(hb_sim,"time","axis","Time")
 
-      # add global attributes
+      # Add global attributes
       ncatt_put(hb_sim,0,"title","Water budget simulated with the HydroBudget model from the rechaRge package")
       ncatt_put(hb_sim,0,"institution","EPFL")
       ncatt_put(hb_sim,0,"references", "Dubois et al. (2021) HESS")
