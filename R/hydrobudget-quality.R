@@ -5,7 +5,7 @@
 #' The columns of the water budget data set input are:
 #' * **year**
 #' * **month**
-#' * **VI**
+#' * **vi**
 #' * **t_mean**
 #' * **runoff**
 #' * **pet**
@@ -120,7 +120,7 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
     budget_month <- water_budget_data[.(rcn_gauging_data$rcn_id[which(rcn_gauging_data$station_id == gauging[st])])]
     budget_month <- na.omit(budget_month, invert = FALSE)
     budget_month <- budget_month[, .(
-      VI = mean(get("VI")),
+      vi = mean(get("vi")),
       t_mean = mean(get("t_mean")),
       runoff = mean(get("runoff")),
       pet = mean(get("pet")),

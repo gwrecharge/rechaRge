@@ -3,7 +3,7 @@
 \name{compute_vertical_inflow}
 \alias{compute_vertical_inflow}
 \title{Determine if precipitation is rain or snow and simulate the snowpack (accumulation
-and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).}
+and melt) to compute the vertical inflow (vi), the liquid water available per day (rainfall + melt water).}
 \usage{
 compute_vertical_inflow(obj, climate_data, nb_core)
 }
@@ -16,6 +16,6 @@ compute_vertical_inflow(obj, climate_data, nb_core)
 }
 \description{
 Determine if precipitation is rain or snow and simulate the snowpack (accumulation
-and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).
+and melt) to compute the vertical inflow (vi), the liquid water available per day (rainfall + melt water).
 }
 \keyword{internal}

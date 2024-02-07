@@ -106,7 +106,7 @@ write_recharge_results.hydrobudget <-
 
       # Variables
       variables <- list(
-        "VI" = ncvar_def("vi", "mm", list(longdim, latdim, timedim), fillvalue, "Vertical inflow", prec = "single"),
+        "vi" = ncvar_def("vi", "mm", list(longdim, latdim, timedim), fillvalue, "Vertical inflow", prec = "single"),
         "t_mean" = ncvar_def("t_mean", "deg_C", list(longdim, latdim, timedim), fillvalue, "Mean temperature", prec="single"),
         "runoff" = ncvar_def("runoff", "mm", list(longdim, latdim, timedim), fillvalue, "Runoff", prec = "single"),
         "pet" = ncvar_def("pet", "mm", list(longdim, latdim, timedim), fillvalue, "Potential evapotranspiration", prec = "single"),
@@ -165,7 +165,7 @@ write_recharge_results.hydrobudget <-
       fwrite(water_budget,
              file.path(output_dir, "bilan_spat_month.csv"))
       budget_unspat <- water_budget[, .(
-        VI = mean(get("VI")),
+        vi = mean(get("vi")),
         t_mean = mean(get("t_mean")),
         runoff = mean(get("runoff")),
         pet = mean(get("pet")),

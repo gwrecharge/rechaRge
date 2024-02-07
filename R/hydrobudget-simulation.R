@@ -184,7 +184,7 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
 }
 
 #' Determine if precipitation is rain or snow and simulate the snowpack (accumulation
-#' and melt) to compute the vertical inflow (VI), the liquid water available per day (rainfall + melt water).
+#' and melt) to compute the vertical inflow (vi), the liquid water available per day (rainfall + melt water).
 #'
 #' @param obj The HydroBudget object.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
@@ -203,22 +203,22 @@ compute_vertical_inflow <- function(obj, climate_data, nb_core) {
     compute_vertical_inflow_cell(obj, input_dd)
   }
 
-  climate_data_VI <- data.table()
+  climate_data_vi <- data.table()
   if (nb_core == 1) {
-    climate_data_VI <- rbindlist(lapply(1:(length(unique(climate_data$climate_id))), do_compute_vertical_inflow_cell))
+    climate_data_vi <- rbindlist(lapply(1:(length(unique(climate_data$climate_id))), do_compute_vertical_inflow_cell))
   } else {
     # Parallel loop
     cluster <- .make_cluster(nb_core)
-    climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dopar% {
+    climate_data_vi <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dopar% {
       do_compute_vertical_inflow_cell(get("k"))
     }
     .stop_cluster(cluster)
     rm(cluster)
   }
 
-  # Compute vertical inflow (VI)
-  climate_data_VI$VI <- climate_data_VI$rain + climate_data_VI$melt
-  climate_data_VI[, c("climate_id", "day", "month", "year", "t_mean", "p_tot", "VI", "PET")]
+  # Compute vertical inflow (vi)
+  climate_data_vi$vi <- climate_data_vi$rain + climate_data_vi$melt
+  climate_data_vi[, c("climate_id", "day", "month", "year", "t_mean", "p_tot", "vi", "PET")]
 }
 
 #' Compute the vertical inflow and the potential evapotranspiration (PET) for a single cell
@@ -347,8 +347,8 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
   rm(roll_mean_freez)
 
   # API computation
-  roll_sum_api <- as.numeric(rollsum(rcn_climate$VI, t_API, fill = NA, na.pad = T, align = "right"))
-  rcn_climate$api <- ifelse(is.na(roll_sum_api), rcn_climate$VI, roll_sum_api)
+  roll_sum_api <- as.numeric(rollsum(rcn_climate$vi, t_API, fill = NA, na.pad = T, align = "right"))
+  rcn_climate$api <- ifelse(is.na(roll_sum_api), rcn_climate$vi, roll_sum_api)
   rm(roll_sum_api)
 
   # RCN variations based on API
@@ -391,11 +391,11 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
 
   # Runoff computation
   sat <- (1000 / rcn_climate$rcn_api) - 10 # function from Monfet (1979)
-  rcn_climate$runoff <- (rcn_climate$VI - (0.2 * sat))^2 / (rcn_climate$VI + (0.8 * sat)) # function from Monfet (1979)
-  rcn_climate$runoff <- ifelse(rcn_climate$VI > (0.2 * sat), rcn_climate$runoff, 0) # function from Monfet (1979)
+  rcn_climate$runoff <- (rcn_climate$vi - (0.2 * sat))^2 / (rcn_climate$vi + (0.8 * sat)) # function from Monfet (1979)
+  rcn_climate$runoff <- ifelse(rcn_climate$vi > (0.2 * sat), rcn_climate$runoff, 0) # function from Monfet (1979)
 
   # Available water that reaches the soil reservoir
-  rcn_climate$available_water <- ifelse((rcn_climate$VI - rcn_climate$runoff) < 0, 0, rcn_climate$VI - rcn_climate$runoff)
+  rcn_climate$available_water <- ifelse((rcn_climate$vi - rcn_climate$runoff) < 0, 0, rcn_climate$vi - rcn_climate$runoff)
 
   # AET and GWR computation
   budget1 <- vector()
@@ -435,7 +435,7 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
     "year" = as.integer(rcn_climate$year),
     "month" = as.integer(rcn_climate$month),
     "day" = as.integer(rcn_climate$day),
-    "VI" = as.numeric(rcn_climate$VI),
+    "vi" = as.numeric(rcn_climate$vi),
     "t_mean" = as.numeric(rcn_climate$t_mean),
     "runoff" = as.numeric(rcn_climate$runoff),
     # "available_water" = as.numeric(available_water$available_water),
@@ -447,9 +447,9 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
     "runoff_2" = as.numeric(runoff_2)
   )
   # NSE
-  VI <- t_mean <- runoff <- pet <- rcn_id <- NULL
+  vi <- t_mean <- runoff <- pet <- rcn_id <- NULL
   w_b <- w_b[, .(
-    VI = sum(VI),
+    vi = sum(vi),
     t_mean = mean(t_mean),
     runoff = sum(runoff),
     # available_water = sum(available_water),

@@ -34,7 +34,7 @@ The columns of the water budget data set input are:
 \itemize{
 \item \strong{year}
 \item \strong{month}
-\item \strong{VI}
+\item \strong{vi}
 \item \strong{t_mean}
 \item \strong{runoff}
 \item \strong{pet}
