@@ -12,7 +12,7 @@ compute_recharge(
   climate,
   rcn_climate,
   period = NULL,
-  nb_core = NULL,
+  nb_core = 1,
   ...
 )
 
@@ -47,7 +47,7 @@ compute_recharge(
 
 \item{period}{The start and end years. If not provided, the start/end years will be extracted from the climate data.}
 
-\item{nb_core}{The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.}
+\item{nb_core}{The number of cores to use in the parallel computations. If NULL, all cores minus one will be used. Default value is 1 (no parallelization).}
 
 \item{...}{Other arguments passed to methods}
 }

@@ -18,7 +18,7 @@ Depends:
     R (>= 4.0)
 Imports:
     airGR,
-    data.table (< 1.15.0),
+    data.table,
     doParallel,
     foreach,
     hydrostats,
