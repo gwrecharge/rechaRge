@@ -160,7 +160,7 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   # cluster parameters
   ifelse(is.null(nb_core),
     nb_core <- detectCores() - 1,
-    nb_core <- as.numeric(nb_core)
+    nb_core <- min(as.numeric(nb_core), detectCores() - 1)
   )
 
   # Calibration parameters
@@ -190,20 +190,31 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
 #' @param nb_core The number of cores to use in the parallel computations.
 #'
+#' @importFrom data.table rbindlist
 #' @keywords internal
 compute_vertical_inflow <- function(obj, climate_data, nb_core) {
   # Execute the snow model and compute Oudin PET
-  # Parallel loop
-  cluster <- .make_cluster(nb_core)
-  climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dopar% {
+
+  do_compute_vertical_inflow_cell <- function(k) {
+    cellgrid <- as.character(unique(climate_data$climate_id)[k])
     # NSE
     climate_id <- NULL
-    cellgrid <- as.character(unique(climate_data$climate_id)[get("k")])
     input_dd <- climate_data[climate_id == cellgrid]
     compute_vertical_inflow_cell(obj, input_dd)
   }
-  .stop_cluster(cluster)
-  rm(cluster)
+
+  climate_data_VI <- data.table()
+  if (nb_core == 1) {
+    climate_data_VI <- rbindlist(lapply(1:(length(unique(climate_data$climate_id))), do_compute_vertical_inflow_cell))
+  } else {
+    # Parallel loop
+    cluster <- .make_cluster(nb_core)
+    climate_data_VI <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dopar% {
+      do_compute_vertical_inflow_cell(get("k"))
+    }
+    .stop_cluster(cluster)
+    rm(cluster)
+  }
 
   # Compute vertical inflow (VI)
   climate_data_VI$VI <- climate_data_VI$rain + climate_data_VI$melt
@@ -279,12 +290,12 @@ compute_potential_evapotranspiration_cell <- function(obj, input_dd) {
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
 #' @param nb_core The number of cores to use in the parallel computations.
 #'
+#' @importFrom data.table rbindlist
 #' @keywords internal
 compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
-  cluster <- .make_cluster(nb_core)
   unique_rcn_id <- unique(rcn_data$rcn_id)
-  j <- 1
-  water_budget <- foreach(j = 1:(length(unique_rcn_id)), .combine = rbind, .inorder = FALSE) %dopar% {
+
+  do_compute_water_budget_cell <- function(j) {
     # Subsets
     cid <- unique_rcn_id[j]
     # NSE
@@ -294,8 +305,19 @@ compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
     rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_id, rcn_climate$rcn_id, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
     compute_water_budget_cell(obj, rcn_climate)
   }
-  .stop_cluster(cluster)
-  rm(unique_rcn_id, cluster)
+
+  water_budget <- data.table()
+  if (nb_core == 1) {
+    water_budget <- rbindlist(lapply(1:(length(unique_rcn_id)), do_compute_water_budget_cell))
+  } else {
+    cluster <- .make_cluster(nb_core)
+    water_budget <- foreach(j = 1:(length(unique_rcn_id)), .combine = rbind, .inorder = FALSE) %dopar% {
+      do_compute_water_budget_cell(get("j"))
+    }
+    .stop_cluster(cluster)
+    rm(cluster)
+  }
+  rm(unique_rcn_id)
 
   water_budget
 }
@@ -409,7 +431,7 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
   # Compute results
   w_b <- data.table(
     "climate_id" = as.integer(rcn_climate$climate_id),
-    "rcn_id" = as.integer(rcn_climate$ID),
+    "rcn_id" = as.integer(rcn_climate$rcn_id),
     "year" = as.integer(rcn_climate$year),
     "month" = as.integer(rcn_climate$month),
     "day" = as.integer(rcn_climate$day),

@@ -1,7 +1,7 @@
 
 #' Simulation using a recharge model
-#' 
-#' Performs a simulation of water recharge using a specific model. 
+#'
+#' Performs a simulation of water recharge using a specific model.
 #'
 #' The expected columns for the RCN data set input are:
 #' * **rcn_id**, the RCN cell ID
@@ -17,11 +17,11 @@
 #' * **t_mean**
 #' * **p_tot**
 #' * **lat**
-#' 
+#'
 #' The expected columns for the RCN-climate data set input are:
 #' * **climate_id** the climate cell ID
 #' * **rcn_id**, the RCN cell ID
-#' 
+#'
 #' The columns of the water budget data set output are:
 #' * **year**
 #' * **month**
@@ -40,13 +40,13 @@
 #' @param climate The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.
 #' @param rcn_climate The relation between the RCN and climate cells. Input can be a data.frame/data.table or a path to a data file.
 #' @param period The start and end years. If not provided, the start/end years will be extracted from the climate data.
-#' @param nb_core The number of cores to use in the parallel computations. If not provided, all cores minus one will be used.
+#' @param nb_core The number of cores to use in the parallel computations. If NULL, all cores minus one will be used. Default value is 1 (no parallelization).
 #' @param ... Other arguments passed to methods
-#' 
+#'
 #' @return The water budget
 #' @rdname compute_recharge
 #' @export
-compute_recharge <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = NULL, ...) {
+compute_recharge <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = 1, ...) {
   UseMethod("compute_recharge")
 }
 
@@ -65,7 +65,7 @@ compute_recharge.default <- function(obj, rcn, climate, rcn_climate, period = NU
 #' @param water_budget The computed water budget.
 #' @param output_dir The output directory where result files will be written. Default is current working directory.
 #' @param ... Other arguments passed to methods
-#' 
+#'
 #' @rdname write_recharge_results
 #' @export
 write_recharge_results <- function(obj, water_budget, output_dir = getwd(), ...) {
