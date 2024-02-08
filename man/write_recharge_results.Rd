@@ -16,7 +16,7 @@ write_recharge_results(obj, water_budget, output_dir = getwd(), ...)
   output_dir = getwd(),
   format = "csv",
   input_rcn = NULL,
-  names = list(x = list(longname = "Longitude", unit = "deg"), y = list(longname =
+  names = list(lon = list(longname = "Longitude", unit = "deg"), lat = list(longname =
     "Lattitude", unit = "deg"), time = list(longname =
     "Month since start of the water budget", unit = "month")),
   ...

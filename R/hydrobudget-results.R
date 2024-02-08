@@ -17,11 +17,11 @@ write_recharge_results.hydrobudget <-
            format = "csv",
            input_rcn = NULL,
            names = list(
-             "x" = list(
+             "lon" = list(
                longname = "Longitude",
                unit = "deg"
                ),
-             "y" = list(
+             "lat" = list(
                longname = "Lattitude",
                unit = "deg"
                ),
@@ -91,14 +91,14 @@ write_recharge_results.hydrobudget <-
       }
 
       # Dimensions
-      longdim <- ncdim_def("x",
-                           get_unit("x", "deg"),
+      longdim <- ncdim_def("lon",
+                           get_unit("lon", "deg"),
                            as.integer(lon),
-                           longname = get_longname("x", "Longitude"))
-      latdim <- ncdim_def("y",
-                          get_unit("y", "deg"),
+                           longname = get_longname("lon", "Longitude"))
+      latdim <- ncdim_def("lat",
+                          get_unit("lat", "deg"),
                           as.integer(lat),
-                          longname = get_longname("x", "Lattitude"))
+                          longname = get_longname("lat", "Lattitude"))
       timedim <- ncdim_def("time",
                            get_unit("time", "month"),
                            as.integer(seq_months),
@@ -122,8 +122,8 @@ write_recharge_results.hydrobudget <-
 
 
       # Additional attributes into dimension and data variables
-      ncatt_put(hb_sim,"x","axis","Longitude")
-      ncatt_put(hb_sim,"y","axis","Lattitude")
+      ncatt_put(hb_sim,"lon","axis","Longitude")
+      ncatt_put(hb_sim,"lat","axis","Lattitude")
       ncatt_put(hb_sim,"time","axis","Time")
 
       # Add global attributes
