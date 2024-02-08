@@ -110,7 +110,7 @@ write_recharge_results.hydrobudget <-
         "t_mean" = ncvar_def("t_mean", "deg_C", list(longdim, latdim, timedim), fillvalue, "Mean temperature", prec="single"),
         "runoff" = ncvar_def("runoff", "mm", list(longdim, latdim, timedim), fillvalue, "Runoff", prec = "single"),
         "pet" = ncvar_def("pet", "mm", list(longdim, latdim, timedim), fillvalue, "Potential evapotranspiration", prec = "single"),
-        "aet" = ncvar_def("aet", "mm", list(longdim, latdim, timedim), fillvalue, "Evapotranspiration", prec = "single"),
+        "aet" = ncvar_def("aet", "mm", list(longdim, latdim, timedim), fillvalue, "Actual evapotranspiration", prec = "single"),
         "gwr" = ncvar_def("gwr", "mm",  list(longdim, latdim, timedim),fillvalue, "Ground water recharge", prec = "single"),
         "runoff_2" = ncvar_def("runoff_2", "mm",  list(longdim, latdim, timedim), fillvalue, "Excess runoff", prec = "single")
       )
