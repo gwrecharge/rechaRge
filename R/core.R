@@ -25,7 +25,7 @@
 #' The columns of the water budget data set output are:
 #' * **year**
 #' * **month**
-#' * **VI**
+#' * **vi**
 #' * **t_mean**
 #' * **runoff**
 #' * **pet**

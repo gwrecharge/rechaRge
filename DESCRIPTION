@@ -23,6 +23,7 @@ Imports:
     foreach,
     hydrostats,
     lubridate,
+    ncdf4,
     parallel,
     plyr,
     progress,
