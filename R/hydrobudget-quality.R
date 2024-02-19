@@ -195,9 +195,19 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
     if (st == 1) {
       simulation_metadata <- data.table(
         station_id = unique(budget_month$station_id),
-        cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
-        T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
-        f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
+        cal_beg = calibration_start,
+        cal_end = calibration_end,
+        val_beg = validation_start,
+        val_end = validation_end,
+        T_snow = T_snow,
+        T_m = T_m,
+        C_m = C_m,
+        TT_F = TT_F,
+        F_T = F_T,
+        t_API = t_API,
+        f_runoff = f_runoff,
+        sw_m = sw_m,
+        f_inf = f_inf,
         KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
         KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
         qtot_sim = mean(budget_month[
@@ -213,18 +223,31 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
           .(year)
         ][[2]]),
         time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
-        KGE_mean_cal = NA_real_, KGE_mean_val = NA_real_
+        KGE_mean_cal = NA_real_,
+        KGE_mean_val = NA_real_
       )
     } else {
       simulation_metadata <- rbind(
         simulation_metadata,
         data.table(
           station_id = unique(budget_month$station_id),
-          cal_beg = calibration_start, cal_end = calibration_end, val_beg = validation_start, val_end = validation_end,
-          T_snow = T_snow, T_m = T_m, C_m = C_m, TT_F = TT_F, F_T = F_T, t_API = t_API,
-          f_runoff = f_runoff, sw_m = sw_m, f_inf = f_inf,
-          KGE_qtot_cal = error_ind[1, 1], KGE_qbase_cal = error_ind[2, 1],
-          KGE_qtot_val = error_ind[1, 2], KGE_qbase_val = error_ind[2, 2],
+          cal_beg = calibration_start,
+          cal_end = calibration_end,
+          val_beg = validation_start,
+          val_end = validation_end,
+          T_snow = T_snow,
+          T_m = T_m,
+          C_m = C_m,
+          TT_F = TT_F,
+          F_T = F_T,
+          t_API = t_API,
+          f_runoff = f_runoff,
+          sw_m = sw_m,
+          f_inf = f_inf,
+          KGE_qtot_cal = error_ind[1, 1],
+          KGE_qbase_cal = error_ind[2, 1],
+          KGE_qtot_val = error_ind[1, 2],
+          KGE_qbase_val = error_ind[2, 2],
           qtot_sim = mean(budget_month[
             , .(qtot = sum(get("runoff") + get("runoff_2") + get("gwr"), na.rm = TRUE)),
             .(year)
@@ -238,7 +261,8 @@ compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging
             .(year)
           ][[2]]),
           time = format(Sys.time(), "%Y_%m_%d-%H_%M"),
-          KGE_mean_cal = NA_real_, KGE_mean_val = NA_real_
+          KGE_mean_cal = NA_real_,
+          KGE_mean_val = NA_real_
         )
       )
     }

@@ -15,6 +15,7 @@ load_example_local_datasets <- function() {
     rcn = file.path("data", "rcn_79402.csv.gz"),
     climate = file.path("data", "climate_1.csv.gz"),
     rcn_climate = file.path("data", "rcn_79402_climate_1.csv.gz"),
+    rcn_gauging = file.path("data", "rcn_79402_gauging.csv.gz"),
     observed_flow = file.path("data", "observed_flow.csv.gz"),
     alpha_lyne_hollick = file.path("data", "alpha_lyne_hollick.csv.gz")
   )
@@ -44,5 +45,10 @@ load_hydrobudget <- function() {
     climate_id = "climate_cell",
     rcn_id = "cell_ID"
   )
+  HB$rcn_gauging_columns <- list(
+    rcn_id = "cell_ID",
+    station_id = "gauging_stat"
+  )
+  HB$alpha_lyne_hollick_columns$station_id <- "station"
   HB
 }
