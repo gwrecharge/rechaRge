@@ -16,4 +16,5 @@ inst/examples/simulation_*
 .httr-oauth
 docs
 simulation_*
+caramel_*
 community_survey/
