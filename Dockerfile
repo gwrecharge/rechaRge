@@ -6,7 +6,7 @@
 
 FROM obiba/rock:snapshot
 
-LABEL ENAC-IT4R <enacit4r@epfl.ch>
+LABEL EPFL-ENAC-IT4R <enacit4research@epfl.ch>
 
 ENV RECHARGE_VERSION main
 
