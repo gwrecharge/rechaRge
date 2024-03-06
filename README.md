@@ -18,7 +18,7 @@ pak::pkg_install("gwrecharge/rechaRge@dev")
 
 ## Example
 
-See [hydrobudget-example.R](https://github.com/gwrecharge/rechaRge-book/blob/main/examples/hydrobudget-example.R).
+See [hydrobudget-example-simulation.R](https://github.com/gwrecharge/rechaRge-book/blob/main/examples/hydrobudget-example-simulation.R) and [hydrobudget-example-caramel.R](https://github.com/gwrecharge/rechaRge-book/blob/main/examples/hydrobudget-example-caramel.R).
 
 ## Publication
 
