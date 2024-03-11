@@ -311,7 +311,10 @@ process_river_flow <- function(obj, observed_flow, alpha_lyne_hollick) {
   # Station IDs are the unknown columns
   get_station_ids <- function(flw) {
     station_ids <- colnames(observed_flow_no_na)
-    station_ids[!(station_ids %in% c("year", "month", "day", "date"))]
+    station_ids <- station_ids[!(station_ids %in% c("year", "month", "day", "date"))]
+    # station IDs must have an alpha lyne hollick
+    station_ids_alpha <- unique(as.character(alpha_lyne_hollick_$station))
+    station_ids[station_ids %in% station_ids_alpha]
   }
   station_ids <- get_station_ids(observed_flow_no_na)
 

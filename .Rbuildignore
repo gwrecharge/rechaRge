@@ -19,6 +19,7 @@
 ^rechaRge\.Rproj$
 ^LICENSE\.md$
 simulation_HydroBudget*
+caramel_*
 ^\.github$
 ^Makefile$
 ^community_survey$
