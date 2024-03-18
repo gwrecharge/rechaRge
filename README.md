@@ -7,13 +7,13 @@
 Using `remotes`
 
 ```r
-remotes::install_github("gwrecharge/rechaRge", ref = "dev")
+remotes::install_github("gwrecharge/rechaRge", ref = "main")
 ```
 
 OR using `pak`
 
 ```r
-pak::pkg_install("gwrecharge/rechaRge@dev")
+pak::pkg_install("gwrecharge/rechaRge@main")
 ```
 
 ## Example
