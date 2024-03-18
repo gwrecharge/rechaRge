@@ -226,6 +226,7 @@ compute_vertical_inflow <- function(obj, climate_data, nb_core) {
 #' @param obj The HydroBudget object.
 #' @param input_dd Spatially distributed daily precipitation and mean temperature time series in a single cell.
 #'
+#' @importFrom data.table set
 #' @keywords internal
 compute_vertical_inflow_cell <- function(obj, input_dd) {
   # Load the packages
@@ -238,30 +239,36 @@ compute_vertical_inflow_cell <- function(obj, input_dd) {
   T_snow <- obj$calibration$T_snow
 
   # Loop for the snowpack
-  input_dd$snow <- ifelse(input_dd$t_mean < T_snow, input_dd$p_tot, 0)
-  input_dd$rain <- ifelse(input_dd$t_mean > T_snow, input_dd$p_tot, 0)
-  input_dd$dd <- ifelse(input_dd$t_mean - T_m > 0, input_dd$t_mean - T_m, 0)
-  input_dd$melt <- NA
-  input_dd$storage <- NA
+  set(input_dd, j = "snow", value = ifelse(input_dd$t_mean < T_snow, input_dd$p_tot, 0))
+  set(input_dd, j = "rain", value = ifelse(input_dd$t_mean > T_snow, input_dd$p_tot, 0))
+  set(input_dd, j = "dd", value = ifelse(input_dd$t_mean - T_m > 0, input_dd$t_mean - T_m, 0))
+  set(input_dd, j = "melt", value = NA)
+  set(input_dd, j = "storage", value = NA)
+
+  melts <- numeric(nrow(input_dd))
+  storages <- numeric(nrow(input_dd))
   for (y in 1:nrow(input_dd)) {
     # y<-1
-    input_dd$melt[y] <- ifelse(y == 1, ifelse(input_dd$dd[y] * C_m < 0, input_dd$dd[y] * C_m, 0),
-      ifelse(input_dd$dd[y] * C_m < input_dd$storage[y - 1],
+    melts[y] <- ifelse(y == 1, ifelse(input_dd$dd[y] * C_m < 0, input_dd$dd[y] * C_m, 0),
+      ifelse(input_dd$dd[y] * C_m < storages[y - 1],
         input_dd$dd[y] * C_m,
-        input_dd$storage[y - 1]
+        storages[y - 1]
       )
     )
-    input_dd$storage[y] <- ifelse(y == 1,
-      ifelse(0 + input_dd$snow[y] - input_dd$melt[y] > 0,
-        0 + input_dd$snow[y] - input_dd$melt[y], 0
+    storages[y] <- ifelse(y == 1,
+      ifelse(0 + input_dd$snow[y] - melts[y] > 0,
+        0 + input_dd$snow[y] - melts[y], 0
       ),
-      ifelse(input_dd$storage[y - 1] + input_dd$snow[y] - input_dd$melt[y] > 0,
-        input_dd$storage[y - 1] + input_dd$snow[y] - input_dd$melt[y], 0
+      ifelse(storages[y - 1] + input_dd$snow[y] - melts[y] > 0,
+        storages[y - 1] + input_dd$snow[y] - melts[y], 0
       )
     )
   }
+  set(input_dd, j = "melt", value = melts)
+  set(input_dd, j = "storage", value = storages)
+
   # Compute Oudin PET
-  input_dd$PET <- compute_potential_evapotranspiration_cell(obj, input_dd)
+  set(input_dd, j = "PET", value = compute_potential_evapotranspiration_cell(obj, input_dd))
 
   input_dd
 }
@@ -327,6 +334,7 @@ compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
 #' @param obj The HydroBudget object.
 #' @param rcn_climate The RCN values with the climate data (daily total precipitation (mm/d) and average daily temperature (°C)) for a single cell.
 #'
+#' @importFrom data.table set
 #' @keywords internal
 compute_water_budget_cell <- function(obj, rcn_climate) {
   requireNamespace("data.table")
@@ -343,12 +351,12 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
 
   # Mean temperature function of F_T
   roll_mean_freez <- as.numeric(rollmean(as.numeric(rcn_climate$t_mean), F_T, fill = NA, na.pad = T, align = "right"))
-  rcn_climate$temp_freez <- ifelse(is.na(roll_mean_freez), rcn_climate$t_mean, roll_mean_freez)
+  set(rcn_climate, j = "temp_freez", value = ifelse(is.na(roll_mean_freez), rcn_climate$t_mean, roll_mean_freez))
   rm(roll_mean_freez)
 
   # API computation
   roll_sum_api <- as.numeric(rollsum(rcn_climate$vi, t_API, fill = NA, na.pad = T, align = "right"))
-  rcn_climate$api <- ifelse(is.na(roll_sum_api), rcn_climate$vi, roll_sum_api)
+  set(rcn_climate, j = "api", value = ifelse(is.na(roll_sum_api), rcn_climate$vi, roll_sum_api))
   rm(roll_sum_api)
 
   # RCN variations based on API
@@ -363,49 +371,49 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
     "rcn_II" = as.numeric(RCNII * f_runoff),
     "api" = as.numeric(rcn_climate$api)
   )
-  rcn_api$rcn3 <- ((-0.00563) * rcn_api$rcn_II^2) + (1.45535 * rcn_api$rcn_II) + 10.82878 # function from Monfet (1979)
-  rcn_api$rcn1 <- (0.00865 * rcn_api$rcn_II^2) + (0.0148 * rcn_api$rcn_II) + 7.39846 # function from Monfet (1979)
-  rcn_api$season <- ifelse(rcn_api$julian_day < 121 | rcn_api$julian_day > 283, 1, # for winter (value of 1)
+  set(rcn_api, j = "rcn3", value = (((-0.00563) * rcn_api$rcn_II^2) + (1.45535 * rcn_api$rcn_II) + 10.82878)) # function from Monfet (1979)
+  set(rcn_api, j = "rcn1", value = ((0.00865 * rcn_api$rcn_II^2) + (0.0148 * rcn_api$rcn_II) + 7.39846)) # function from Monfet (1979)
+  set(rcn_api, j = "season", value = ifelse(rcn_api$julian_day < 121 | rcn_api$julian_day > 283, 1, # for winter (value of 1)
     ifelse((rcn_api$julian_day > 120 & rcn_api$julian_day < 181) | (rcn_api$julian_day > 243 & rcn_api$julian_day < 284), 2, # for spring and fall (value of 2)
       0
     )
-  ) # for summer (value of 0)
-  rcn_api$rcn_wint <- ifelse(rcn_api$season == 1, ifelse(rcn_api$api > 22, rcn_api$rcn3, ifelse(rcn_api$api < 11, rcn_api$rcn1, rcn_api$rcn_II)), 0)
-  rcn_api$rcn_spr_fall <- ifelse(rcn_api$season == 2, ifelse(rcn_api$api > 37, rcn_api$rcn3, ifelse(rcn_api$api < 18.5, rcn_api$rcn1, rcn_api$rcn_II)), 0)
-  rcn_api$rcn_summ <- ifelse(rcn_api$season == 0, ifelse(rcn_api$api < 50, rcn_api$rcn1, ifelse(rcn_api$api > 80, rcn_api$rcn3, rcn_api$rcn_II)), 0)
+  )) # for summer (value of 0)
+  set(rcn_api, j = "rcn_wint", value = ifelse(rcn_api$season == 1, ifelse(rcn_api$api > 22, rcn_api$rcn3, ifelse(rcn_api$api < 11, rcn_api$rcn1, rcn_api$rcn_II)), 0))
+  set(rcn_api, j = "rcn_spr_fall", value = ifelse(rcn_api$season == 2, ifelse(rcn_api$api > 37, rcn_api$rcn3, ifelse(rcn_api$api < 18.5, rcn_api$rcn1, rcn_api$rcn_II)), 0))
+  set(rcn_api, j = "rcn_summ", value = ifelse(rcn_api$season == 0, ifelse(rcn_api$api < 50, rcn_api$rcn1, ifelse(rcn_api$api > 80, rcn_api$rcn3, rcn_api$rcn_II)), 0))
 
   # If land use = water or wetland - if frozen rcn = 100 otherwise artificially decrease the RCN value to 10 to allow for maximum water storage on the cell
   if (RCNII == 100) { # is the RCNII value = 100 (water, wetlands)
-    rcn_api$rcn_api <- ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
+    set(rcn_api, j = "rcn_api", value = ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
       100, # if yes, RCN = 100 % (just runoff)
       10
-    ) # if no, consider RCN = 10
+    )) # if no, consider RCN = 10
   } else {
-    rcn_api$rcn_api <- ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
+    set(rcn_api, j = "rcn_api", value = ifelse(rcn_climate$temp_freez < TT_F, # is the soil frozen ?
       100, # if yes, RCN = 100 % (just runoff)
       rcn_api$rcn_summ + rcn_api$rcn_spr_fall + rcn_api$rcn_wint
-    )
+    ))
   }
-  rcn_climate$rcn_api <- rcn_api$rcn_api
+  set(rcn_climate, j = "rcn_api", value = rcn_api$rcn_api)
   rm(rcn_api)
 
   # Runoff computation
   sat <- (1000 / rcn_climate$rcn_api) - 10 # function from Monfet (1979)
-  rcn_climate$runoff <- (rcn_climate$vi - (0.2 * sat))^2 / (rcn_climate$vi + (0.8 * sat)) # function from Monfet (1979)
-  rcn_climate$runoff <- ifelse(rcn_climate$vi > (0.2 * sat), rcn_climate$runoff, 0) # function from Monfet (1979)
+  set(rcn_climate, j = "runoff", value = ((rcn_climate$vi - (0.2 * sat))^2 / (rcn_climate$vi + (0.8 * sat)))) # function from Monfet (1979)
+  set(rcn_climate, j = "runoff", value = ifelse(rcn_climate$vi > (0.2 * sat), rcn_climate$runoff, 0)) # function from Monfet (1979)
 
   # Available water that reaches the soil reservoir
-  rcn_climate$available_water <- ifelse((rcn_climate$vi - rcn_climate$runoff) < 0, 0, rcn_climate$vi - rcn_climate$runoff)
+  set(rcn_climate, j = "available_water", value = ifelse((rcn_climate$vi - rcn_climate$runoff) < 0, 0, rcn_climate$vi - rcn_climate$runoff))
 
   # AET and GWR computation
-  budget1 <- vector()
-  gwr <- vector()
-  budget2 <- vector()
+  budget1 <- vector(length = nrow(rcn_climate))
+  gwr <- vector(length = nrow(rcn_climate))
+  budget2 <- vector(length = nrow(rcn_climate))
   pet_list <- rcn_climate$PET
   available_water_list <- rcn_climate$available_water
-  aet <- vector()
-  delta_reservoir <- vector()
-  runoff_2 <- vector()
+  aet <- vector(length = nrow(rcn_climate))
+  delta_reservoir <- vector(length = nrow(rcn_climate))
+  runoff_2 <- vector(length = nrow(rcn_climate))
   for (ii in 1:nrow(rcn_climate)) {
     if (ii == 1) {
       budget1[ii] <- 0
