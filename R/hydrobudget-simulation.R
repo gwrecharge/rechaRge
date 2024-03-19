@@ -85,7 +85,7 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' @importFrom parallel detectCores makeCluster stopCluster
 #' @importFrom doParallel registerDoParallel
 #' @importFrom lubridate yday year month
-#' @importFrom data.table data.table setkey :=
+#' @importFrom data.table data.table := set
 #' @importFrom foreach foreach %dopar%
 #' @importFrom zoo rollmean rollsum
 #' @importFrom stats na.contiguous na.omit
@@ -156,6 +156,7 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   # filter climate data for the period
   list_year <- seq(year_start, year_end, 1)
   climate_data <- climate_data[year %in% list_year]
+  set(climate_data, j = "julian_day", value = yday(as.POSIXct(paste(climate_data$year, climate_data$month, climate_data$day, sep = "-"), format = "%Y-%m-%d")))
 
   # cluster parameters
   ifelse(is.null(nb_core),
@@ -218,7 +219,7 @@ compute_vertical_inflow <- function(obj, climate_data, nb_core) {
 
   # Compute vertical inflow (vi)
   climate_data_vi$vi <- climate_data_vi$rain + climate_data_vi$melt
-  climate_data_vi[, c("climate_id", "day", "month", "year", "t_mean", "p_tot", "vi", "PET")]
+  climate_data_vi[, c("climate_id", "day", "month", "year", "julian_day", "t_mean", "p_tot", "vi", "PET")]
 }
 
 #' Compute the vertical inflow and the potential evapotranspiration (PET) for a single cell
@@ -282,7 +283,7 @@ compute_vertical_inflow_cell <- function(obj, input_dd) {
 #' @keywords internal
 compute_potential_evapotranspiration_cell <- function(obj, input_dd) {
   round(PE_Oudin(
-    JD = yday(as.POSIXct(paste(input_dd$year, input_dd$month, input_dd$day, sep = "-"), format = "%Y-%m-%d")),
+    JD = input_dd$julian_day,
     Temp = input_dd$t_mean,
     Lat = unique(input_dd$lat),
     # The name of the cells is long-lat binded, so the last 3 numbers are the latitude with 1 digit
@@ -307,7 +308,7 @@ compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
     cid <- unique_rcn_id[j]
     # NSE
     rcn_id <- NULL
-    rcn_subset <- rcn_data[rcn_id == cid]
+    rcn_subset <- rcn_data[rcn_id == cid,]
     rcn_climate <- merge(rcn_subset, climate_data, by = "climate_id", all.x = TRUE)
     rcn_climate <- na.omit(rcn_climate[order(rcn_climate$climate_id, rcn_climate$rcn_id, rcn_climate$year, rcn_climate$month, rcn_climate$day), ])
     compute_water_budget_cell(obj, rcn_climate)
@@ -365,7 +366,7 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
     "year" = as.numeric(rcn_climate$year),
     "month" = as.numeric(rcn_climate$month),
     "day" = as.numeric(rcn_climate$day),
-    "julian_day" = yday(as.POSIXct(paste(rcn_climate$year, rcn_climate$month, rcn_climate$day, sep = "-"), format = "%Y-%m-%d")),
+    "julian_day" = rcn_climate$julian_day,
     "temperature_moy" = as.numeric(rcn_climate$t_mean),
     "temp_freez" = as.numeric(rcn_climate$temp_freez),
     "rcn_II" = as.numeric(RCNII * f_runoff),
