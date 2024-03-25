@@ -24,3 +24,4 @@ caramel_*
 ^Makefile$
 ^community_survey$
 ^Dockerfile$
+^CRAN-SUBMISSION$
