@@ -16,6 +16,7 @@
 ^derby.log$
 ^logs$
 ^pkgdown$
+^docs$
 ^rechaRge\.Rproj$
 ^LICENSE\.md$
 simulation_HydroBudget*
