@@ -4,7 +4,7 @@
 # https://github.com/datashield/docker-rock
 #
 
-FROM obiba/rock:snapshot
+FROM obiba/rock:latest
 
 LABEL EPFL-ENAC-IT4R <enacit4research@epfl.ch>
 
@@ -21,6 +21,7 @@ RUN apt-get update && \
 #RUN Rscript -e "update.packages(ask = FALSE, repos = c('https://cloud.r-project.org'), instlib = '/usr/local/lib/R/site-library')"
 
 # Install new R packages
-RUN Rscript -e "install.packages(c('caRamel', 'ggplot2', 'pak'), repos = c('https://cloud.r-project.org'), lib = '/usr/local/lib/R/site-library')"
-RUN Rscript -e "pak::pkg_install('gwrecharge/rechaRge@$RECHARGE_VERSION', lib = '$ROCK_LIB')"
-RUN chown -R rock $ROCK_LIB
+RUN \
+  Rscript -e "install.packages(c('caRamel', 'ggplot2', 'pak'), repos = c('https://cloud.r-project.org'), lib = '/usr/local/lib/R/site-library')" && \
+  Rscript -e "pak::pkg_install('gwrecharge/rechaRge@$RECHARGE_VERSION', lib = '$ROCK_LIB')" && \
+  chown -R rock $ROCK_LIB
