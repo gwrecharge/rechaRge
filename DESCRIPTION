@@ -11,9 +11,9 @@ Description: 'HydroBudget' is a spatially distributed
     groundwater recharge model that computes a superficial water
     budget on grid cells with outputs aggregated into monthly time steps.
     It was developed as an accessible and computationally affordable model
-    to simulate GWR over large areas (thousands of km2, regional-scale
-    watersheds) and for long time periods (decades), in cold and humid
-    climates.
+    to simulate groundwater recharge over large areas (thousands of km2, 
+    regional-scale watersheds) and for long time periods (decades), in cold
+    and humid climates.
 Depends:
     R (>= 4.0)
 Imports:
