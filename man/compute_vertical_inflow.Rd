@@ -5,14 +5,14 @@
 \title{Determine if precipitation is rain or snow and simulate the snowpack (accumulation
 and melt) to compute the vertical inflow (vi), the liquid water available per day (rainfall + melt water).}
 \usage{
-compute_vertical_inflow(obj, climate_data, nb_core)
+compute_vertical_inflow(obj, climate_data, workers)
 }
 \arguments{
 \item{obj}{The HydroBudget object.}
 
 \item{climate_data}{The daily total precipitation (mm/d) and average daily temperature (°C).}
 
-\item{nb_core}{The number of cores to use in the parallel computations.}
+\item{workers}{The number of workers to use in the parallel computations.}
 }
 \description{
 Determine if precipitation is rain or snow and simulate the snowpack (accumulation

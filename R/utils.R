@@ -20,21 +20,6 @@
   rval
 }
 
-#' Make the computation cluster
-#' @keywords internal
-.make_cluster <- function(nb_core) {
-  cluster <- makeCluster(nb_core) # if on a computer with windows
-  registerDoParallel(cluster) # if on a computer with windows
-  # registerDoMC(nb_core)        #if on a server - DoParallel does not work, use that instead (doMC)
-  cluster
-}
-
-#' Stop the computation cluster
-#' @keywords internal
-.stop_cluster <- function(cluster) {
-  stopCluster(cluster) # to be muted if doMC is used instead of doParallel
-}
-
 #' Create a new progress instance with default settings.
 #' @import progress
 #' @keywords internal
