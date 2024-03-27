@@ -22,9 +22,6 @@
     <loc>/reference/compute_recharge.html</loc>
   </url>
   <url>
-    <loc>/reference/compute_simulation_quality_assessment.html</loc>
-  </url>
-  <url>
     <loc>/reference/compute_vertical_inflow.html</loc>
   </url>
   <url>
@@ -41,21 +38,6 @@
   </url>
   <url>
     <loc>/reference/dot-is.verbose.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dot-make_cluster.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dot-newProgress.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dot-stop_cluster.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dot-tickProgress.html</loc>
-  </url>
-  <url>
-    <loc>/reference/dot-updateProgress.html</loc>
   </url>
   <url>
     <loc>/reference/evaluate_simulation_quality.html</loc>
