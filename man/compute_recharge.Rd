@@ -47,7 +47,7 @@ compute_recharge(
 
 \item{period}{The start and end years. If not provided, the start/end years will be extracted from the climate data.}
 
-\item{workers}{The number of workers to use in the parallel computations. If NULL, an optimal number of cores will be used. Default value is 1 (no parallelization).}
+\item{workers}{The number of workers to use in the parallel computations. If NULL, an optimal number of cores will be used. This optimal number is also the maximum value. Default value is 1 (no parallelization).}
 
 \item{...}{Other arguments passed to methods}
 }

@@ -167,6 +167,8 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   workers_ <- ifelse(is.null(workers), workers_default,
                     max(min(as.integer(workers), workers_default), 1)
   )
+  if (isTRUE(verbose))
+    message(sprintf("Using %i workers", workers_))
 
   # Execute the snow model and compute Oudin PET
   if (isTRUE(verbose))
