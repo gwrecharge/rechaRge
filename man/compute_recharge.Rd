@@ -12,7 +12,7 @@ compute_recharge(
   climate,
   rcn_climate,
   period = NULL,
-  nb_core = 1,
+  workers = 1,
   ...
 )
 
@@ -22,7 +22,7 @@ compute_recharge(
   climate,
   rcn_climate,
   period = NULL,
-  nb_core = NULL,
+  workers = 1,
   ...
 )
 
@@ -32,7 +32,7 @@ compute_recharge(
   climate,
   rcn_climate,
   period = NULL,
-  nb_core = NULL,
+  workers = 1,
   ...
 )
 }
@@ -47,7 +47,7 @@ compute_recharge(
 
 \item{period}{The start and end years. If not provided, the start/end years will be extracted from the climate data.}
 
-\item{nb_core}{The number of cores to use in the parallel computations. If NULL, all cores minus one will be used. Default value is 1 (no parallelization).}
+\item{workers}{The number of workers to use in the parallel computations. If NULL, an optimal number of cores will be used. This optimal number is also the maximum value. Default value is 1 (no parallelization).}
 
 \item{...}{Other arguments passed to methods}
 }
@@ -128,7 +128,7 @@ HB <- rechaRge::new_hydrobudget(
 simul_period <- c(2010, 2017)
 
 # Parallel computing option
-# nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
+# workers <- 6
 
 # Simulation with the HydroBudget model
 water_budget <- rechaRge::compute_recharge(
@@ -137,7 +137,7 @@ water_budget <- rechaRge::compute_recharge(
   climate = input_climate,
   rcn_climate = input_rcn_climate,
   period = simul_period
-  # nb_core = nb_core
+  # workers = workers
 )
 head(water_budget)
 }

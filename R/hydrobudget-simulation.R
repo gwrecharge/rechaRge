@@ -82,11 +82,11 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' @method compute_recharge hydrobudget
 #' @export
 #'
-#' @importFrom parallel detectCores makeCluster stopCluster
-#' @importFrom doParallel registerDoParallel
+#' @importFrom future plan sequential multisession availableCores
+#' @importFrom doFuture %dofuture%
 #' @importFrom lubridate yday year month
 #' @importFrom data.table data.table := set
-#' @importFrom foreach foreach %dopar%
+#' @importFrom foreach foreach
 #' @importFrom zoo rollmean rollsum
 #' @importFrom stats na.contiguous na.omit
 #' @importFrom airGR PE_Oudin
@@ -116,7 +116,7 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' simul_period <- c(2010, 2017)
 #'
 #' # Parallel computing option
-#' # nb_core <- 6 # if nothing is set, by default it will be all the computer core - 1
+#' # workers <- 6
 #'
 #' # Simulation with the HydroBudget model
 #' water_budget <- rechaRge::compute_recharge(
@@ -125,23 +125,25 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #'   climate = input_climate,
 #'   rcn_climate = input_rcn_climate,
 #'   period = simul_period
-#'   # nb_core = nb_core
+#'   # workers = workers
 #' )
 #' head(water_budget)
 #' }
-compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = NULL, ...) {
-  gc()
-  pb <- .newProgress(total = 4)
-
+compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period = NULL, workers = 1, ...) {
   # Load the input data and ensure expected column names
   rcn_data <- .as.data.table(rcn, obj$rcn_columns)
   climate_data <- .as.data.table(climate, obj$climate_columns)
   rcn_climate_data <- .as.data.table(rcn_climate, obj$rcn_climate_columns)
   rcn_data <- merge(rcn_data, rcn_climate_data, all = FALSE)
   year_range <- period
-  nb_core <- nb_core
+  workers_ <- workers
 
-  .updateProgress(pb, step = 1, total = 4, tokens = list(what = "Checking input data..."))
+  # time tracking starts after data were loaded
+  verbose <- .is.verbose()
+  start.time <- Sys.time()
+
+  if (isTRUE(verbose))
+    message("Checking input data...")
   # Simulation period
   if (is.null(year_range)) {
     year_range <- c(min(climate_data$year), max(climate_data$year))
@@ -158,29 +160,33 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   climate_data <- climate_data[year %in% list_year]
   set(climate_data, j = "julian_day", value = yday(as.POSIXct(paste(climate_data$year, climate_data$month, climate_data$day, sep = "-"), format = "%Y-%m-%d")))
 
-  # cluster parameters
-  ifelse(is.null(nb_core),
-    nb_core <- detectCores() - 1,
-    nb_core <- min(as.numeric(nb_core), detectCores() - 1)
+  # future parameters
+  # use a magic number to calculate the default count of workers
+  # because data.table already parallels on its own
+  workers_default <- max(ceiling(availableCores()/7), 1)
+  workers_ <- ifelse(is.null(workers), workers_default,
+                    max(min(as.integer(workers), workers_default), 1)
   )
-
-  # Calibration parameters
-  # TODO calibration validation?
+  if (isTRUE(verbose))
+    message(sprintf("Using %i workers", workers_))
 
   # Execute the snow model and compute Oudin PET
-  .updateProgress(pb, step = 2, total = 4, tokens = list(what = "Computing vertical inflow..."))
-  climate_data <- compute_vertical_inflow(obj, climate_data, nb_core)
+  if (isTRUE(verbose))
+    message("Computing vertical inflow...")
+  climate_data <- compute_vertical_inflow(obj, climate_data, workers_)
 
   # Run HB water budget partitioning
   # Model loop by grid cell in parallel
-  .updateProgress(pb, step = 3, total = 4, tokens = list(what = "Computing water budget..."))
-  water_budget <- compute_water_budget(obj, rcn_data, climate_data, nb_core)
+  if (isTRUE(verbose))
+    message("Computing water budget...")
+  water_budget <- compute_water_budget(obj, rcn_data, climate_data, workers_)
 
   # Clean
   rm(climate_data, rcn_data)
   gc()
-  .updateProgress(pb, step = 4, total = 4, tokens = list(what = "Completed"))
 
+  if (isTRUE(verbose))
+    message(sprintf(" done in %gs", Sys.time() - start.time))
   water_budget
 }
 
@@ -189,15 +195,18 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
 #'
 #' @param obj The HydroBudget object.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
-#' @param nb_core The number of cores to use in the parallel computations.
+#' @param workers The number of workers to use in the parallel computations.
 #'
 #' @importFrom data.table rbindlist
+#' @importFrom progressr progressor
 #' @keywords internal
-compute_vertical_inflow <- function(obj, climate_data, nb_core) {
+compute_vertical_inflow <- function(obj, climate_data, workers) {
   # Execute the snow model and compute Oudin PET
+  p <- progressor(along = 1:(length(unique(climate_data$climate_id))))
 
   do_compute_vertical_inflow_cell <- function(k) {
     cellgrid <- as.character(unique(climate_data$climate_id)[k])
+    p(message = sprintf("Computing cell %s", cellgrid))
     # NSE
     climate_id <- NULL
     input_dd <- climate_data[climate_id == cellgrid]
@@ -205,16 +214,14 @@ compute_vertical_inflow <- function(obj, climate_data, nb_core) {
   }
 
   climate_data_vi <- data.table()
-  if (nb_core == 1) {
+  if (workers == 1) {
     climate_data_vi <- rbindlist(lapply(1:(length(unique(climate_data$climate_id))), do_compute_vertical_inflow_cell))
   } else {
     # Parallel loop
-    cluster <- .make_cluster(nb_core)
-    climate_data_vi <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dopar% {
+    plan(multisession, workers = workers)
+    climate_data_vi <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dofuture% {
       do_compute_vertical_inflow_cell(get("k"))
     }
-    .stop_cluster(cluster)
-    rm(cluster)
   }
 
   # Compute vertical inflow (vi)
@@ -296,16 +303,19 @@ compute_potential_evapotranspiration_cell <- function(obj, input_dd) {
 #' @param obj The HydroBudget object.
 #' @param rcn_data The RCN values.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
-#' @param nb_core The number of cores to use in the parallel computations.
+#' @param workers The number of workers to use in the parallel computations.
 #'
 #' @importFrom data.table rbindlist
+#' @importFrom progressr progressor
 #' @keywords internal
-compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
+compute_water_budget <- function(obj, rcn_data, climate_data, workers) {
   unique_rcn_id <- unique(rcn_data$rcn_id)
+  p <- progressor(along = 1:(length(unique_rcn_id)))
 
   do_compute_water_budget_cell <- function(j) {
     # Subsets
     cid <- unique_rcn_id[j]
+    p(message = sprintf("Computing cell %s", cid))
     # NSE
     rcn_id <- NULL
     rcn_subset <- rcn_data[rcn_id == cid,]
@@ -315,15 +325,13 @@ compute_water_budget <- function(obj, rcn_data, climate_data, nb_core) {
   }
 
   water_budget <- data.table()
-  if (nb_core == 1) {
+  if (workers == 1) {
     water_budget <- rbindlist(lapply(1:(length(unique_rcn_id)), do_compute_water_budget_cell))
   } else {
-    cluster <- .make_cluster(nb_core)
-    water_budget <- foreach(j = 1:(length(unique_rcn_id)), .combine = rbind, .inorder = FALSE) %dopar% {
+    plan(multisession, workers = workers)
+    water_budget <- foreach(j = 1:(length(unique_rcn_id)), .combine = rbind, .inorder = FALSE) %dofuture% {
       do_compute_water_budget_cell(get("j"))
     }
-    .stop_cluster(cluster)
-    rm(cluster)
   }
   rm(unique_rcn_id)
 

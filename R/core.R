@@ -40,20 +40,20 @@
 #' @param climate The daily total precipitation (mm/d) and average daily temperature (°C). Input can be a data.frame/data.table or a path to a data file.
 #' @param rcn_climate The relation between the RCN and climate cells. Input can be a data.frame/data.table or a path to a data file.
 #' @param period The start and end years. If not provided, the start/end years will be extracted from the climate data.
-#' @param nb_core The number of cores to use in the parallel computations. If NULL, all cores minus one will be used. Default value is 1 (no parallelization).
+#' @param workers The number of workers to use in the parallel computations. If NULL, an optimal number of cores will be used. This optimal number is also the maximum value. Default value is 1 (no parallelization).
 #' @param ... Other arguments passed to methods
 #'
 #' @return The water budget
 #' @rdname compute_recharge
 #' @export
-compute_recharge <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = 1, ...) {
+compute_recharge <- function(obj, rcn, climate, rcn_climate, period = NULL, workers = 1, ...) {
   UseMethod("compute_recharge")
 }
 
 #' @rdname compute_recharge
 #' @method compute_recharge default
 #' @export
-compute_recharge.default <- function(obj, rcn, climate, rcn_climate, period = NULL, nb_core = NULL, ...) {
+compute_recharge.default <- function(obj, rcn, climate, rcn_climate, period = NULL, workers = 1, ...) {
   cat("The compute recharge function has no default model\n")
 }
 

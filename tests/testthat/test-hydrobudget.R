@@ -9,7 +9,7 @@ test_that("Water budget computation for a single cell", {
     climate = df$climate,
     rcn_climate = df$rcn_climate,
     period = simul_period,
-    nb_core = 1
+    workers = 1
   )
 
   wb_expected <- data.table::fread(file.path("data", "water_budget_79402.csv"))

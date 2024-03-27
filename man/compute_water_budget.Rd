@@ -4,7 +4,7 @@
 \alias{compute_water_budget}
 \title{Compute the water budget}
 \usage{
-compute_water_budget(obj, rcn_data, climate_data, nb_core)
+compute_water_budget(obj, rcn_data, climate_data, workers)
 }
 \arguments{
 \item{obj}{The HydroBudget object.}
@@ -13,7 +13,7 @@ compute_water_budget(obj, rcn_data, climate_data, nb_core)
 
 \item{climate_data}{The daily total precipitation (mm/d) and average daily temperature (°C).}
 
-\item{nb_core}{The number of cores to use in the parallel computations.}
+\item{workers}{The number of workers to use in the parallel computations.}
 }
 \description{
 Compute the water budget
