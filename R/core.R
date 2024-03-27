@@ -102,3 +102,26 @@ write_recharge_rasters <- function(obj, water_budget, input_rcn, crs, output_dir
 write_recharge_rasters.default <- function(obj, water_budget, input_rcn, crs, output_dir = getwd(), ...) {
   cat("The write recharge rasters function has no default model\n")
 }
+
+#' Evaluate the quality of the simulation result
+#'
+#' From a simulation result, evaluate the quality by comparing with observations. The quality
+#' measurement can be used for model calibration (e.g. caRamel package) or sensitivity evaluation
+#' (e.g. sensitivity package).
+#'
+#' @param obj The recharge object.
+#' @param water_budget The computed water budget. Input can be a data.frame/data.table or a path to a data file.
+#' @param ... Other arguments passed to methods
+#'
+#' @rdname evaluate_simulation_quality
+#' @export
+evaluate_simulation_quality <- function(obj, water_budget, ...) {
+  UseMethod("evaluate_simulation_quality")
+}
+
+#' @rdname evaluate_simulation_quality
+#' @method evaluate_simulation_quality default
+#' @export
+evaluate_simulation_quality.default <- function(obj, water_budget, ...) {
+  cat("The Evaluate simulation quality function has no default model\n")
+}

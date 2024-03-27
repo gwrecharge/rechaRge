@@ -38,7 +38,7 @@ test_that("Quality assesment", {
   hb <- load_hydrobudget()
   simul_period <- c(2010, 2010)
 
-  result <- rechaRge::compute_simulation_quality_assessment(
+  result <- rechaRge::evaluate_simulation_quality(
     hb,
     water_budget = wb,
     rcn_gauging = df$rcn_gauging,

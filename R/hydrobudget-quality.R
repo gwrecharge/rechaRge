@@ -37,6 +37,8 @@
 #' @param period The start and end years. If not provided, the start/end years will be extracted from the water budget data.
 #'
 #' @importFrom data.table setkey
+#' @rdname evaluate_simulation_quality
+#' @method evaluate_simulation_quality hydrobudget
 #' @export
 #'
 #' @examples
@@ -61,7 +63,7 @@
 #'
 #' # ... compute the water budget ...
 #'
-#' result <- compute_simulation_quality_assessment(
+#' result <- evaluate_simulation_quality(
 #'   HB,
 #'   water_budget = water_budget,
 #'   rcn_gauging = input_rcn_gauging,
@@ -70,7 +72,7 @@
 #'   period = simul_period
 #' )
 #' }
-compute_simulation_quality_assessment <- function(obj, water_budget, rcn_gauging, observed_flow, alpha_lyne_hollick, period = NULL) {
+evaluate_simulation_quality.hydrobudget <- function(obj, water_budget, rcn_gauging, observed_flow, alpha_lyne_hollick, period = NULL, ...) {
   water_budget_data <- .as.data.table(water_budget)
   rcn_gauging_data <- .as.data.table(rcn_gauging, obj$rcn_gauging_columns)
   year_range <- period

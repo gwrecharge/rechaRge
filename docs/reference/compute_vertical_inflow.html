@@ -14,7 +14,7 @@ and melt) to compute the vertical inflow (vi), the liquid water available per da
     
     <a class="navbar-brand me-2" href="../index.html">rechaRge</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.9.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.10.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -54,7 +54,7 @@ and melt) to compute the vertical inflow (vi), the liquid water available per da
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_vertical_inflow</span><span class="op">(</span><span class="va">obj</span>, <span class="va">climate_data</span>, <span class="va">nb_core</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">compute_vertical_inflow</span><span class="op">(</span><span class="va">obj</span>, <span class="va">climate_data</span>, <span class="va">workers</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -67,8 +67,8 @@ and melt) to compute the vertical inflow (vi), the liquid water available per da
 <dd><p>The daily total precipitation (mm/d) and average daily temperature (°C).</p></dd>
 
 
-<dt>nb_core</dt>
-<dd><p>The number of cores to use in the parallel computations.</p></dd>
+<dt>workers</dt>
+<dd><p>The number of workers to use in the parallel computations.</p></dd>
 
 </dl></div>
 
