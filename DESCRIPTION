@@ -26,7 +26,7 @@ Imports:
     lubridate,
     ncdf4,
     plyr,
-    progress,
+    progressr,
     raster,
     stats,
     sp,

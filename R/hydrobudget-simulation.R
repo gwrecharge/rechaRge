@@ -130,9 +130,6 @@ new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
 #' head(water_budget)
 #' }
 compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period = NULL, workers = 1, ...) {
-  gc()
-  pb <- .newProgress(total = 4)
-
   # Load the input data and ensure expected column names
   rcn_data <- .as.data.table(rcn, obj$rcn_columns)
   climate_data <- .as.data.table(climate, obj$climate_columns)
@@ -141,7 +138,12 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   year_range <- period
   workers_ <- workers
 
-  .updateProgress(pb, step = 1, total = 4, tokens = list(what = "Checking input data..."))
+  # time tracking starts after data were loaded
+  verbose <- .is.verbose()
+  start.time <- Sys.time()
+
+  if (isTRUE(verbose))
+    message("Checking input data...")
   # Simulation period
   if (is.null(year_range)) {
     year_range <- c(min(climate_data$year), max(climate_data$year))
@@ -167,19 +169,22 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   )
 
   # Execute the snow model and compute Oudin PET
-  .updateProgress(pb, step = 2, total = 4, tokens = list(what = "Computing vertical inflow..."))
+  if (isTRUE(verbose))
+    message("Computing vertical inflow...")
   climate_data <- compute_vertical_inflow(obj, climate_data, workers_)
 
   # Run HB water budget partitioning
   # Model loop by grid cell in parallel
-  .updateProgress(pb, step = 3, total = 4, tokens = list(what = "Computing water budget..."))
+  if (isTRUE(verbose))
+    message("Computing water budget...")
   water_budget <- compute_water_budget(obj, rcn_data, climate_data, workers_)
 
   # Clean
   rm(climate_data, rcn_data)
   gc()
-  .updateProgress(pb, step = 4, total = 4, tokens = list(what = "Completed"))
 
+  if (isTRUE(verbose))
+    message(sprintf(" done in %gs", Sys.time() - start.time))
   water_budget
 }
 
@@ -191,12 +196,15 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
 #' @param workers The number of workers to use in the parallel computations.
 #'
 #' @importFrom data.table rbindlist
+#' @importFrom progressr progressor
 #' @keywords internal
 compute_vertical_inflow <- function(obj, climate_data, workers) {
   # Execute the snow model and compute Oudin PET
+  p <- progressor(along = 1:(length(unique(climate_data$climate_id))))
 
   do_compute_vertical_inflow_cell <- function(k) {
     cellgrid <- as.character(unique(climate_data$climate_id)[k])
+    p(message = sprintf("Computing cell %s", cellgrid))
     # NSE
     climate_id <- NULL
     input_dd <- climate_data[climate_id == cellgrid]
@@ -296,13 +304,16 @@ compute_potential_evapotranspiration_cell <- function(obj, input_dd) {
 #' @param workers The number of workers to use in the parallel computations.
 #'
 #' @importFrom data.table rbindlist
+#' @importFrom progressr progressor
 #' @keywords internal
 compute_water_budget <- function(obj, rcn_data, climate_data, workers) {
   unique_rcn_id <- unique(rcn_data$rcn_id)
+  p <- progressor(along = 1:(length(unique_rcn_id)))
 
   do_compute_water_budget_cell <- function(j) {
     # Subsets
     cid <- unique_rcn_id[j]
+    p(message = sprintf("Computing cell %s", cid))
     # NSE
     rcn_id <- NULL
     rcn_subset <- rcn_data[rcn_id == cid,]
