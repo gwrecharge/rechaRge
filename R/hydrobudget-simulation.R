@@ -16,7 +16,7 @@
 #'
 #' @return An object of class hydrobudget
 #' @export
-new_hydrobugdet <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
+new_hydrobudget <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
   # TODO some sanity checks with the calibration values
   structure(list(
     calibration = list(

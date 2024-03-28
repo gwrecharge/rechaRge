@@ -23,7 +23,7 @@ load_example_local_datasets <- function() {
 
 
 load_hydrobudget <- function() {
-  HB <- new_hydrobugdet(
+  HB <- new_hydrobudget(
     T_m = 2.1, # melting temperature (°C)
     C_m = 6.2, # melting coefficient (mm/°C/d)
     TT_F = -17.6, # Threshold temperature for soil frost (°C)
