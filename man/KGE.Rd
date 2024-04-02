@@ -2,19 +2,26 @@
 % Please edit documentation in R/KGE.R
 \name{KGE}
 \alias{KGE}
-\title{Kling-Gupta Efficiency computation}
+\title{KGE computation}
 \usage{
 KGE(sim, obs)
 }
 \arguments{
-\item{sim}{simulated values}
+\item{sim}{Simulated values}
 
-\item{obs}{observed values}
+\item{obs}{Observed values}
 }
 \value{
 Kling-Gupta Efficiency between 'sim' and 'obs'
 }
 \description{
-Kling-Gupta Efficiency computation
+Compute the Kling-Gupta Efficiency coefficient which summarizes the discrepancy
+between observed values and the values expected under the model in question.
 }
-\keyword{internal}
+\examples{
+\dontrun{
+sim <- c(0.5, 0.5, 10, 15, 0.5, 20, 25, 0.1, 15, 10)
+obs <- c(1, 0.1, 0.1, 20, 0.6, 30, 20, 0.5, 30, 8)
+rechaRge::KGE(sim, obs)
+}
+}
