@@ -87,6 +87,11 @@
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pkg_install.html" class="external-link">pkg_install</a></span><span class="op">(</span><span class="st">"gwrecharge/rechaRge@main"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h2>
+<p>In addition with the online <a href="https://gwrecharge.github.io/rechaRge/" class="external-link">rechaRge package documentation</a>, a book is also available with detailed explanations and examples, see <a href="https://gwrecharge.github.io/rechaRge-book/" class="external-link">rechaRge: the HydroBudget model</a>.</p>
+</div>
+<div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
 <p>See <a href="https://github.com/gwrecharge/rechaRge-book/blob/main/examples/hydrobudget-example-simulation.R" class="external-link">hydrobudget-example-simulation.R</a> and <a href="https://github.com/gwrecharge/rechaRge-book/blob/main/examples/hydrobudget-example-calibration.R" class="external-link">hydrobudget-example-calibration.R</a>.</p>
@@ -94,183 +99,7 @@
 <div class="section level2">
 <h2 id="publication">Publication<a class="anchor" aria-label="anchor" href="#publication"></a>
 </h2>
-<p>Original material from <strong>HydroBudget – Groundwater recharge model in R</strong> <a href="https://doi.org/10.5683/SP3/EUDV3H" class="external-link">https://doi.org/10.5683/SP3/EUDV3H</a>.</p>
-<hr>
-<div class="section level4">
-<h4 id="general-information">GENERAL INFORMATION<a class="anchor" aria-label="anchor" href="#general-information"></a>
-</h4>
-<p>Title: HydroBudget – Groundwater recharge model in R</p>
-<p>Authors:</p>
-<div class="sourceCode" id="cb3"><pre class="sourceCode R"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a>Emmanuel Dubois</span>
-<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>UQAM</span>
-<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a></span>
-<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a>Marie Larocque</span>
-<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a>UQAM</span>
-<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a></span>
-<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>Sylvain Gagne</span>
-<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>UQAM</span>
-<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a></span>
-<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a>Guillaume Meyzonnat</span>
-<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a>UQAM</span></code></pre></div>
-<p>Description: HydroBudget (HB) is a spatially distributed groundwater recharge (GWR) model that computes a superficial water budget on grid cells with outputs aggregated into monthly time steps. It was developed as an accessible and computationally affordable model to simulate GWR over large areas (thousands of km2, regional-scale watersheds) and for long time periods (decades), in cold and humid climates. The model is coded in R and was developed at UQAM by the team of Pr Marie Larocque’s research Chair (Water and land conservation) as part of a project funded by the Quebec Ministry of the Environment (Ministère de l’Environnement et de la Lutte contre les changements climatiques - MELCC). Results of GWR simulation over southern Quebec with HB are presented in Dubois et al. (2021). Le model script is furnished with an application example for the Petite du Chene River in southern Quebec and a user guide.</p>
-<p>Date of publication: 2021-11-05 Location of the dataset: Montréal, Quebec, Canada</p>
-<p>DOI of this dataset: 10.5683/SP3/EUDV3H</p>
-<p>Reference of this dataset: Dubois, E., Larocque, M., Gagné, S., and Meyzonnat, G. (2021a). HydroBudget – Groundwater recharge model in R. Scholars Portal Dataverse. doi: 10.5683/SP3/EUDV3H</p>
-<p>The script was tested within the research team of Pr Larocque before making it publicly available.</p>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="access-information">ACCESS INFORMATION<a class="anchor" aria-label="anchor" href="#access-information"></a>
-</h4>
-<p>Data licenses / restrictions, or usage limitations:</p>
-<p>The HydroBudget code, developed by the research team of Pr Larocque, is open-licensed and therefore assigned to a CC BY licence.</p>
-<p>For the application example of the Petite du Chene River, the climate data and river flow observations are provided for training purpose only. They are under a governmental licence (<a href="http://www.droitauteur.gouv.qc.ca/copyright.php" class="external-link uri">http://www.droitauteur.gouv.qc.ca/copyright.php</a>):</p>
-<ul>
-<li>The climate data was extracted and post-processed from the interpolated climate data provided by the MELCC (Bergeron, 2016) for the extend of the watershed of the Petite du Chene River. These data are available for training purpose only.</li>
-<li>River flow observations are provided by the CEHQ (Centre de l’Expertise Hydrique du Quebec) and the raw data are available here: <a href="https://www.cehq.gouv.qc.ca/hydrometrie/historique_donnees/fiche_station.asp?NoStation=023701" class="external-link uri">https://www.cehq.gouv.qc.ca/hydrometrie/historique_donnees/fiche_station.asp?NoStation=023701</a> <a href="https://www.cehq.gouv.qc.ca/hydrometrie/historique_donnees/fiche_station.asp?NoStation=023702" class="external-link uri">https://www.cehq.gouv.qc.ca/hydrometrie/historique_donnees/fiche_station.asp?NoStation=023702</a>
-</li>
-</ul>
-<p>References for these datasets are, respectively:</p>
-<ul>
-<li>Bergeron, O. (2016). Guide d’utilisation 2016 - Grilles climatiques quotidiennes du Programme de surveillance du climat du Québec, version 2 (User guide 2016 – Daily climate grids from the Quebec Climate monitoring program, version 2). Québec City (Canada) : ministère du Développement durable, de l’Environnement et de la Lutte contre les changements climatiques, Direction du suivi de l’état de l’environnement.</li>
-<li>CEHQ (Centre d’expertise hydrique du Québec). (2021). cehq.gouv.qc.ca website accessed in November 2021.</li>
-</ul>
-<p>As well, these GIS files of the application example have licence restrictions:</p>
-<ul>
-<li>L_watercourse_NRCAN_petite_riv_du_chene_NAD83.shp open government licence – Canada (<a href="https://open.canada.ca/en/open-government-licence-canada" class="external-link uri">https://open.canada.ca/en/open-government-licence-canada</a>)</li>
-<li>S_gauging_station_watersheds_NAD83.shp government licence – Quebec (<a href="http://www.droitauteur.gouv.qc.ca/copyright.php" class="external-link uri">http://www.droitauteur.gouv.qc.ca/copyright.php</a>)</li>
-</ul>
-<p>Associated publication:</p>
-<blockquote>
-<p>Dubois, E., Larocque, M., Gagné, S. and Meyzonnat, G. (2021). Simulation of long-term spatiotemporal variations in regional-scale groundwater recharge: contributions of a water budget approach in cold and humid climates. Hydrology and Earth System Sciences, 25(12), 6567‑6589. <a href="https://doi.org/10.5194/hess-25-6567-2021" class="external-link uri">https://doi.org/10.5194/hess-25-6567-2021</a></p>
-</blockquote>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="data--files-overview">DATA &amp; FILES OVERVIEW<a class="anchor" aria-label="anchor" href="#data--files-overview"></a>
-</h4>
-<p>The dataset is composed of 3 components:</p>
-<ul>
-<li>the current READ_ME.txt file</li>
-<li>the HydroBudget user-guide</li>
-<li>the HydroBudget folder (17 files)</li>
-</ul>
-<p>The HydroBudget folder contains different folders:</p>
-<p><strong>folder 01-input contains the input data</strong></p>
-<ul>
-<li>alpha_lyne_hollick.csv: statistically calibrated α following Ladson et al. (2013) procedure for the Lyne and Hollick (1979) baseflow computation for the two gauging stations (the baseflow computation itself is included in HB script). The file contains two attributes:
-<ul>
-<li>station: name of the gauging station</li>
-<li>alpha: value of the calibrated alpha parameter</li>
-</ul>
-</li>
-<li>input_climate.csv: daily total precipitation (mm/d) and average daily temperature (°C) of the Quebec climate interpolated grid (Bergeron, 2016) from 1961-01-01 to 2017-12-31. The file contains six attributes:
-<ul>
-<li>climate_cell: ID of the 10 km x 10 km climate cell</li>
-<li>day: day of the date</li>
-<li>month: month of the date</li>
-<li>year: year of the date</li>
-<li>t_mean: average temperature of the day (°C)</li>
-<li>p_tot: total precipitation of the day (mm/d)</li>
-<li>lat: latitude of the climate cell center (°)</li>
-</ul>
-</li>
-<li>input_rcn.csv: RCN values on a 500 m x 500 m grid. A RCN value is given for each grid cell of the watershed with the corresponding climate cell and the coordinates of the center of each RCN cell in NAD83 Quebec Lambert (EPSG: 32198):
-<ul>
-<li>climate_cell: ID of the 10 km x 10 km climate cell</li>
-<li>cell_ID: ID of the 500 m x 500 m RCN cell</li>
-<li>RCNII: value of the RCN computed for the RCN cell</li>
-<li>X_L93: x coordinate of the center of the RCN cell</li>
-<li>Y_L93: y coordinate of the center of the RCN cell</li>
-</ul>
-</li>
-<li>input_rcn_gauging.csv: table with the list of RCN cells located in each gauging station watershed. The table is composed of two attributes:
-<ul>
-<li>cell_ID: ID of the 500 m x 500 m RCN cell</li>
-<li>gauging_stat: gauging station associated to that cell Note: Since the watersheds of the two gauging stations can be overlaying, RCN cells can be associated with the two gauging stations; in that case, the RCN cell ID appears twice in the table, once with each gauging station</li>
-</ul>
-</li>
-<li>observed_flow.csv: measured river flow (mm/d) of the 2 gauging stations for the entire time period covered by the climate data with:
-<ul>
-<li>year: year of the date</li>
-<li>month: month of the date</li>
-<li>day: day of the date</li>
-<li>23701: measured river flow at the 23701 station (mm/d)</li>
-<li>23702: measured river flow at the 23702 station (mm/d) Note: unavailable data (including if flow measurements do not exist for a given period) are marked with a “NA” (Not Available).</li>
-</ul>
-</li>
-</ul>
-<p>Note: all the csv files are “data.table” formatted for R. The extension of the files can change depending on the chosen downloading option.</p>
-<p>Note: on the Dataverse website, the file extension of the input data is .tab</p>
-<p><strong>folder 02-scripts_HB contains R scripts</strong></p>
-<ul>
-<li><p>01-river_flow_data_processing.R: R script used to process the observed river flow rates. It will automatically fill the gaps in the daily time series (up to 5 missing days) and select a subset of the longest period of river flow observations within the simulation period for each station; extract the list of the gauging stations with observations during the simulation period; compute the Lyne and Hollick baseflow using the calibrated α for the gauging stations; and resample river flows and baseflows with a monthly time step.</p></li>
-<li><p>02-HB_function.R: R script containing the HydroBudget function (HB). The function will run HB in parallel on all the grid cells of the watershed following Figure 1 processes. After defining all the variables in the function (sections 1.1 to 1.4), a first parallel loop runs the degree-day model and compute Oudin PET on each climate cell for the chosen simulation period (section 1.5 of the script). A second parallel loop runs HB water partitioning on each RCN cell (section 1.6 of the script). To start and finish the parallel loops, the code needs to be changed if the model is run on a computer without a Windows environment (change package “doParallel” for Windows to package “doMC”). The options for the non-Windows environment are muted by default. The monthly spatialized and averaged water budget is saved in the working directory. As well, the function automatically analyzes the results for each available gauging station based on the comparison of the simulated monthtly total flow (runoff + excess runoff + potential GWR) and potential GWR to the monthly river flow and baseflow (section 1.7). For each station the code considers a calibration period (first 2/3 of the observation period) and a validation period (last 1/3 of the observation period). The last section (1.8) exports rasters of the interannual simulated runoff, AET, and potential GWR with the resolution of the RCN grid and in NAD83 Quebec Lambert coordinates (EPSG: 32198) into the working directory. In case the RCN method needs to be adapted to another version of the method, changes need to be done in the subsections 3.6.1.3 to 3.6.1.5 of the parallel loop of the model.</p></li>
-</ul>
-<p><strong>folder 03-GIS_petite_du_chene contains GIS files for the application example</strong></p>
-<p>Note: all coordinates are in NAD83 Quebec Lambert (EPSG: 32198)</p>
-<p>Note: all the files associated to a shapefile are in a compressed ZIP file</p>
-<ul>
-<li><p>L_watercourse_NRCAN_petite_riv_du_chene_NAD83.zip (lines): Petite du Chene River watercourse extracted and simplified (one attribute with the name of the river) from <a href="https://www.nrcan.gc.ca/science-and-data/science-and-research/earth-sciences/geography/topographic-information/geobase-surface-water-program-geeau/national-hydrographic-network/21361" class="external-link uri">https://www.nrcan.gc.ca/science-and-data/science-and-research/earth-sciences/geography/topographic-information/geobase-surface-water-program-geeau/national-hydrographic-network/21361</a></p></li>
-<li>
-<p>P_gauging_stations_petite_riv_du_chene_NAD83.zip (points): location of the gauging station with 3 attributes:</p>
-<ul>
-<li>station_id: name of the gauging station</li>
-<li>x_NAD83: x coordinate of the station</li>
-<li>y_NAD83: y coordinate of the station</li>
-</ul>
-</li>
-<li><p>R_RCN_NAD83.tif (raster): raster of the RCN values for the RCN cells</p></li>
-<li><p>S_climate_grid_petite_riv_du_chene_NAD83.zip (polygons): 10 km x 10 km climate cells for the Petite du Chene River watershed (one attribute with the climate cell ID)</p></li>
-<li><p>S_gauging_station_watersheds_NAD83.zip (polygons): watersheds of the gauging stations (one attribute with the name of the gauging station) from <a href="https://www.cehq.gouv.qc.ca/hydrometrie/index.htm" class="external-link uri">https://www.cehq.gouv.qc.ca/hydrometrie/index.htm</a></p></li>
-<li>
-<p>S_grid_gauging_petite_riv_du_chene_NAD83.zip (polygons): grid for the gauging stations with 3 attributes:</p>
-<ul>
-<li>cell_id: ID of the 500 m x 500 m RCN cell</li>
-<li>gauging_st: gauging station</li>
-<li>clim_cell: ID of the 10 km x 10 km climate cell Note: Since the watersheds of the two gauging stations can be overlaying, RCN cells can be associated with each of them; in that case, the cell_id appears twice in the attribute table, once with each gauging station</li>
-</ul>
-</li>
-<li>
-<p>S_grid_petite_riv_du_chene_NAD83.zip (polygons): grid for the river watershed with 2 attributes:</p>
-<ul>
-<li>cell_id: ID of the 500 m x 500 m RCN cell</li>
-<li>clim_cell: ID of the 10 km x 10 km climate cell</li>
-</ul>
-</li>
-<li><p>S_watershed_petite_riv_du_chene_simul_NAD83.zip (polygon): watershed of the Petite du Chene River (one attribute corresponding to the ID given to the watershed in Dubois et al. (2021))</p></li>
-</ul>
-<p><strong>00-demonstration_HB.Rproj: R project</strong></p>
-<p>It opens the R scripts 01-HydroBudget.R (if it does not, manually load the script in the R project)</p>
-<p><strong>01-HydroBudget.R: R script that runs HB on the Petite du Chene River</strong></p>
-<p>This script will run HB on the Petite du Chene River with a single set of parameters. It contains the references to the inputs data located in the folder 01-input previously detailed and the references to the scripts located in 02-scripts_HB. It creates a folder for the results, simulates the water budget on the watershed, saves the results for the entire watershed (spatially distributed, averaged on the watershed, and averaged for each gauging station), computes the objective functions for the 2 gauging stations per period ((KGEqtot)station, (KGEqbase)station, and KGEmean for both calibration and validation periods), and saves a summary of the simulation in a separate csv file;</p>
-<p>The HydroBudget user guide provides details for the HydroBudget model as well as for the application example on the Petite du Chene River. It should be cited as:</p>
-<blockquote>
-<p>Dubois, E., Larocque, M., Gagné, S. et Meyzonnat, G. (2021). HydroBudget User Guide: Version 1.1. Université du Québec à Montréal. Département des sciences de la Terre et de l’atmosphere. <a href="https://archipel.uqam.ca/14075/" class="external-link uri">https://archipel.uqam.ca/14075/</a></p>
-</blockquote>
-<hr>
-</div>
-<div class="section level4">
-<h4 id="information-on-methodology">INFORMATION ON METHODOLOGY<a class="anchor" aria-label="anchor" href="#information-on-methodology"></a>
-</h4>
-<p>The technical details, equations ruling the model, sensitivity analysis, and calibration procedure are detailed in the HydroBudget user guide and in the publication from Dubois et al. (2021). Users are invited to refer to these documents for more information.</p>
-<p>The packages used for the simulation of groundwater recharge with the Hydrobuget model are:</p>
-<ul>
-<li>data.table: (version 1.13.6) used to optimize computation time</li>
-<li>plyr: (version 1.8.6) spilt-apply-combine tools</li>
-<li>lubridate: (version 1.8.0) to work with date</li>
-<li>zoo: (version 1.8.8 ) for time gaps interpolation</li>
-<li>hydrostats: (version 0.2.7) to compute baseflows with the Lyne and Hollick filter</li>
-<li>stats: (version 4.0.3) to find the longest period without NA</li>
-<li>hydroGOF: (version 0.4.0) to compute KGE</li>
-<li>stringr: (version 1.4.0) for string operations</li>
-<li>sp: (version 1.4.5) to work with CRS (for raster projections)</li>
-<li>raster: (version 3.4.5) to export rasters</li>
-<li>airGR: (version 1.4.3.65) to compute Oudin PET</li>
-<li>doParallel: (version 1.0.16) for parallel computing on a Windows environment</li>
-<li>doMC: (version 1.3.7) for parallel computing on a non-Windows environment /! need to mute the stopCluster(cluster) after the parallel loops</li>
-</ul>
-</div>
+<p>Original material from the publication <strong>HydroBudget – Groundwater recharge model in R</strong> <a href="https://doi.org/10.5683/SP3/EUDV3H" class="external-link">https://doi.org/10.5683/SP3/EUDV3H</a>.</p>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

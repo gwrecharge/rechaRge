@@ -36,6 +36,7 @@ Suggests:
     testthat (>= 3.0.0),
     curl
 URL: https://github.com/gwrecharge/rechaRge/,
+    https://gwrecharge.github.io/rechaRge-book/,
     https://hess.copernicus.org/articles/25/6567/2021/,
     https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/EUDV3H
 BugReports: https://github.com/gwrecharge/rechaRge/issues/
