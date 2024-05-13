@@ -13,7 +13,7 @@
 write_recharge_results.hydrobudget <-
   function(obj,
            water_budget,
-           output_dir = getwd(),
+           output_dir = tempdir(),
            format = "csv",
            input_rcn = NULL,
            names = list(
@@ -179,6 +179,8 @@ write_recharge_results.hydrobudget <-
              file.path(output_dir, "bilan_unspat_month.csv"))
       rm(budget_unspat)
     }
+
+    invisible(output_dir)
   }
 
 #' Write HydroBudget model results as raster files
@@ -194,7 +196,7 @@ write_recharge_rasters.hydrobudget <-
            water_budget,
            input_rcn,
            crs,
-           output_dir = getwd(),
+           output_dir = tempdir(),
            ...) {
     if (!dir.exists(output_dir)) {
       dir.create(output_dir, recursive = TRUE)
@@ -261,4 +263,6 @@ write_recharge_rasters.hydrobudget <-
     )
 
     rm(aet, budget_month_spat, gwr, x_interannual)
+
+    invisible(output_dir)
   }

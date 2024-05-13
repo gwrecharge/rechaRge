@@ -9,11 +9,9 @@
 #' @export
 #'
 #' @examples
-#' \dontrun{
 #' sim <- c(0.5, 0.5, 10, 15, 0.5, 20, 25, 0.1, 15, 10)
 #' obs <- c(1, 0.1, 0.1, 20, 0.6, 30, 20, 0.5, 30, 8)
 #' rechaRge::KGE(sim, obs)
-#' }
 KGE <- function(sim, obs) {
   if (is.na(match(class(sim), c("integer", "numeric", "ts", "zoo"))) |
       is.na(match(class(obs), c("integer", "numeric", "ts", "zoo")))) {

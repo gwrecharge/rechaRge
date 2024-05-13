@@ -9,6 +9,9 @@ with_verbose(verbose = TRUE)
 \arguments{
 \item{verbose}{Logical to set for having verbose messages}
 }
+\value{
+(Invisible) the return value of \link[base]{options}
+}
 \description{
 Verbose option
 }

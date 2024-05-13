@@ -1,44 +1,44 @@
 Package: rechaRge
-Title: 'HydroBudget' – Groundwater Recharge Model
-Version: 0.10.0
+Title: HydroBudget – Groundwater Recharge Model
+Version: 1.0.0
 Authors@R: c(
-    person("Yannick", "Marcon", , "yannick.marcon@epfl.ch", role = c("cre", "ctb"),
-           comment = c(ORCID = "0000-0003-0138-2023")),
-    person("Emmanuel", "Dubois", , "emmanuel.dubois@epfl.ch", role = c("aut", "cph"),
-           comment = c(ORCID = "0000-0003-4896-6368"))
+  person("Yannick", "Marcon", , "yannick.marcon@epfl.ch", role = c("cre", "ctb"),
+    comment = c(ORCID = "0000-0003-0138-2023")),
+  person("Emmanuel", "Dubois", , "emmanuel.dubois@epfl.ch", role = c("aut", "cph"),
+    comment = c(ORCID = "0000-0003-4896-6368"))
   )
-Description: 'HydroBudget' is a spatially distributed
-    groundwater recharge model that computes a superficial water
-    budget on grid cells with outputs aggregated into monthly time steps.
-    It was developed as an accessible and computationally affordable model
-    to simulate groundwater recharge over large areas (thousands of km2, 
-    regional-scale watersheds) and for long time periods (decades), in cold
-    and humid climates.
+Description: HydroBudget is a spatially distributed
+  groundwater recharge model that computes a superficial water
+  budget on grid cells with outputs aggregated into monthly time steps.
+  It was developed as an accessible and computationally affordable model
+  to simulate groundwater recharge over large areas (thousands of km2,
+  regional-scale watersheds) and for long time periods (decades), in cold
+  and humid climates. Model algorithms are based on the research of
+  Dubois, E. et al. (2021a) <doi:10.5683/SP3/EUDV3H> and 
+  Dubois, E. et al. (2021b) <doi:10.5194/hess-25-6567-2021>.
 Depends:
     R (>= 4.0)
 Imports:
-    airGR,
-    data.table,
-    future,
-    doFuture,
-    foreach,
-    hydrostats,
-    lubridate,
-    ncdf4,
-    plyr,
-    progressr,
-    raster,
-    stats,
-    sp,
-    zoo,
-    R.utils
+  airGR,
+  data.table,
+  future,
+  doFuture,
+  foreach,
+  hydrostats,
+  lubridate,
+  ncdf4,
+  plyr,
+  progressr,
+  raster,
+  stats,
+  sp,
+  zoo,
+  R.utils
 Suggests: 
-    testthat (>= 3.0.0),
-    curl
+  testthat (>= 3.0.0),
+  curl
 URL: https://github.com/gwrecharge/rechaRge/,
-    https://gwrecharge.github.io/rechaRge-book/,
-    https://hess.copernicus.org/articles/25/6567/2021/,
-    https://borealisdata.ca/dataset.xhtml?persistentId=doi:10.5683/SP3/EUDV3H
+  https://gwrecharge.github.io/rechaRge-book/
 BugReports: https://github.com/gwrecharge/rechaRge/issues/
 License: CC BY 4.0
 Encoding: UTF-8

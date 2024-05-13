@@ -11,7 +11,7 @@ write_recharge_rasters(
   water_budget,
   input_rcn,
   crs,
-  output_dir = getwd(),
+  output_dir = tempdir(),
   ...
 )
 
@@ -20,7 +20,7 @@ write_recharge_rasters(
   water_budget,
   input_rcn,
   crs,
-  output_dir = getwd(),
+  output_dir = tempdir(),
   ...
 )
 
@@ -29,7 +29,7 @@ write_recharge_rasters(
   water_budget,
   input_rcn,
   crs,
-  output_dir = getwd(),
+  output_dir = tempdir(),
   ...
 )
 }
@@ -42,9 +42,12 @@ write_recharge_rasters(
 
 \item{crs}{The coordinate reference systems.}
 
-\item{output_dir}{The output directory where result files will be written. Default is current working directory.}
+\item{output_dir}{The output directory where result files will be written. Default is a temporary directory.}
 
 \item{...}{Other arguments passed to methods}
+}
+\value{
+(Invisible) the output directory.
 }
 \description{
 Export raster for interannual runoff, aet and GWR.

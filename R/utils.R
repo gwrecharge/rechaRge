@@ -23,6 +23,7 @@
 #' Verbose option
 #'
 #' @param verbose Logical to set for having verbose messages
+#' @return (Invisible) the return value of \link[base]{options}
 #' @export
 with_verbose <- function(verbose = TRUE) {
   options(recharge.verbose = isTRUE(verbose))
@@ -32,6 +33,7 @@ with_verbose <- function(verbose = TRUE) {
 #'
 #' @param progress Logical to set for having a progress bar
 #' @importFrom progressr handlers
+#' @return (Invisible) the return value of \link[progressr]{handlers}
 #' @export
 with_progress <- function(progress = TRUE) {
   options(recharge.progress = isTRUE(progress))

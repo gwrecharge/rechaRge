@@ -9,6 +9,9 @@ with_progress(progress = TRUE)
 \arguments{
 \item{progress}{Logical to set for having a progress bar}
 }
+\value{
+(Invisible) the return value of \link[progressr]{handlers}
+}
 \description{
 Progress option
 }

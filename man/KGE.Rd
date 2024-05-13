@@ -19,9 +19,7 @@ Compute the Kling-Gupta Efficiency coefficient which summarizes the discrepancy
 between observed values and the values expected under the model in question.
 }
 \examples{
-\dontrun{
 sim <- c(0.5, 0.5, 10, 15, 0.5, 20, 25, 0.1, 15, 10)
 obs <- c(1, 0.1, 0.1, 20, 0.6, 30, 20, 0.5, 30, 8)
 rechaRge::KGE(sim, obs)
-}
 }

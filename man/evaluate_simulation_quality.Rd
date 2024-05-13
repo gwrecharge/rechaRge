@@ -35,6 +35,11 @@ evaluate_simulation_quality(obj, water_budget, ...)
 
 \item{period}{The start and end years. If not provided, the start/end years will be extracted from the water budget data.}
 }
+\value{
+The model-specific quality assessment.
+
+The HydroBudget quality assessment.
+}
 \description{
 From a simulation result, evaluate the quality by comparing with observations. The quality
 measurement can be used for model calibration (e.g. caRamel package) or sensitivity evaluation
