@@ -173,7 +173,7 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   # Execute the snow model and compute Oudin PET
   if (isTRUE(verbose))
     message("Computing vertical inflow...")
-  climate_data <- compute_vertical_inflow(obj, climate_data, workers_)
+  climate_data <- compute_vertical_inflow(obj, climate_data)
 
   # Run HB water budget partitioning
   # Model loop by grid cell in parallel
@@ -195,12 +195,11 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
 #'
 #' @param obj The HydroBudget object.
 #' @param climate_data The daily total precipitation (mm/d) and average daily temperature (°C).
-#' @param workers The number of workers to use in the parallel computations.
 #'
 #' @importFrom data.table rbindlist
 #' @importFrom progressr progressor
 #' @keywords internal
-compute_vertical_inflow <- function(obj, climate_data, workers) {
+compute_vertical_inflow <- function(obj, climate_data) {
   # Execute the snow model and compute Oudin PET
   p <- progressor(along = 1:(length(unique(climate_data$climate_id))))
 
@@ -214,15 +213,7 @@ compute_vertical_inflow <- function(obj, climate_data, workers) {
   }
 
   climate_data_vi <- data.table()
-  if (workers == 1) {
-    climate_data_vi <- rbindlist(lapply(1:(length(unique(climate_data$climate_id))), do_compute_vertical_inflow_cell))
-  } else {
-    # Parallel loop
-    plan(multisession, workers = workers)
-    climate_data_vi <- foreach(k = 1:(length(unique(climate_data$climate_id))), .combine = rbind, .inorder = FALSE) %dofuture% {
-      do_compute_vertical_inflow_cell(get("k"))
-    }
-  }
+  climate_data_vi <- rbindlist(lapply(1:(length(unique(climate_data$climate_id))), do_compute_vertical_inflow_cell))
 
   # Compute vertical inflow (vi)
   climate_data_vi$vi <- climate_data_vi$rain + climate_data_vi$melt
