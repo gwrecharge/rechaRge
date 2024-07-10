@@ -1,8 +1,14 @@
-# rechaRge [![CRAN status](https://www.r-pkg.org/badges/version/rechaRge)](https://CRAN.R-project.org/package=rechaRge) [![R-CMD-check](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml)
+# rechaRge [![CRAN status](https://www.r-pkg.org/badges/version/rechaRge)](https://CRAN.R-project.org/package=rechaRge) [![R-CMD-check](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/gwrecharge/rechaRge/actions/workflows/R-CMD-check.yaml) [![](https://cranlogs.r-pkg.org/badges/rechaRge)](https://cran.r-project.org/package=rechaRge)
 
 > The results of the survey used to assess the community expectations regarding this package are presented here: https://github.com/gwrecharge/rechaRge-book/blob/main/community_survey/survey_main_results.md 
 
 ## Installation
+
+From CRAN
+
+```r
+install.packages("rechaRge")
+```
 
 Using `remotes`
 
