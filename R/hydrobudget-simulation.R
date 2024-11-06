@@ -398,7 +398,7 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
   rm(rcn_api)
 
   # Runoff computation
-  sat <- (1000 / rcn_climate$rcn_api) - 10 # function from Monfet (1979)
+  sat <- (25400 / rcn_climate$rcn_api) - 254 #correction to convert the initial equation in inches to mm (factor of x25.4)
   set(rcn_climate, j = "runoff", value = ((rcn_climate$vi - (0.2 * sat))^2 / (rcn_climate$vi + (0.8 * sat)))) # function from Monfet (1979)
   set(rcn_climate, j = "runoff", value = ifelse(rcn_climate$vi > (0.2 * sat), rcn_climate$runoff, 0)) # function from Monfet (1979)
 
