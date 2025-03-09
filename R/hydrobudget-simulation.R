@@ -368,7 +368,7 @@ compute_water_budget_cell <- function(obj, rcn_climate) {
     "julian_day" = rcn_climate$julian_day,
     "temperature_moy" = as.numeric(rcn_climate$t_mean),
     "temp_freez" = as.numeric(rcn_climate$temp_freez),
-    "rcn_II" = as.numeric(RCNII * f_runoff),
+    "rcn_II" = as.numeric(100-(100-RCNII)*1/f_runoff),
     "api" = as.numeric(rcn_climate$api)
   )
   set(rcn_api, j = "rcn3", value = (((-0.00563) * rcn_api$rcn_II^2) + (1.45535 * rcn_api$rcn_II) + 10.82878)) # function from Monfet (1979)
