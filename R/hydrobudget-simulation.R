@@ -13,10 +13,11 @@
 #' @param f_runoff The runoff factor (-)
 #' @param sw_m The maximum soil water content (mm)
 #' @param f_inf The infiltration factor (-)
+#' @param grad Gradient for PET based on latitude (-)
 #'
 #' @return An object of class hydrobudget
 #' @export
-new_hydrobudget <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
+new_hydrobudget <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf, grad) {
   # TODO some sanity checks with the calibration values
   structure(list(
     calibration = list(
@@ -33,6 +34,7 @@ new_hydrobudget <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf) {
       # soil parameters
       sw_m = sw_m,
       f_inf = f_inf,
+      grad = grad,
       sw_init = 50
     ),
     rcn_columns = list(
@@ -141,7 +143,6 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   # Find minimum and maximum latitudes
   lat_min=min(climate_data$lat)
   lat_max=max(climate_data$lat)
-  grad=2
   climate_data$pet_mult = grad - (climate_data$lat - lat_min) / (lat_max - lat_min) * (grad-1)
 
   # time tracking starts after data were loaded
