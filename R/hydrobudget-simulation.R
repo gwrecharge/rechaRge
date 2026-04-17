@@ -138,6 +138,12 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   year_range <- period
   workers_ <- workers
 
+  # Find minimum and maximum latitudes
+  lat_min=min(climate_data$lat)
+  lat_max=max(climate_data$lat)
+  grad=2
+  climate_data$pet_mult = grad - (climate_data$lat - lat_min) / (lat_max - lat_min) * (grad-1)
+
   # time tracking starts after data were loaded
   verbose <- .is.verbose()
   start.time <- Sys.time()
@@ -217,6 +223,10 @@ compute_vertical_inflow <- function(obj, climate_data) {
 
   # Compute vertical inflow (vi)
   climate_data_vi$vi <- climate_data_vi$rain + climate_data_vi$melt
+
+  # Adjust PET with gradient on latitudes
+  climate_data_vi$PET = climate_data_vi$PET * climate_data_vi$pet_mult 
+
   climate_data_vi[, c("climate_id", "day", "month", "year", "julian_day", "t_mean", "p_tot", "vi", "PET")]
 }
 
@@ -268,8 +278,6 @@ compute_vertical_inflow_cell <- function(obj, input_dd) {
 
   # Compute Oudin PET
   set(input_dd, j = "PET", value = compute_potential_evapotranspiration_cell(obj, input_dd))
-
-  input_dd
 }
 
 #' Compute PET based on the Oudin formula
