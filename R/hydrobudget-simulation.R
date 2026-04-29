@@ -13,11 +13,12 @@
 #' @param f_runoff The runoff factor (-)
 #' @param sw_m The maximum soil water content (mm)
 #' @param f_inf The infiltration factor (-)
-#' @param grad Gradient for PET based on latitude (-)
+#' @param mult_pet Factor for PET
+#' @param grad_pet Gradient for PET based on latitude (-)
 #'
 #' @return An object of class hydrobudget
 #' @export
-new_hydrobudget <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf, grad) {
+new_hydrobudget <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf, mult_pet, grad_pet) {
   # TODO some sanity checks with the calibration values
   structure(list(
     calibration = list(
@@ -34,7 +35,8 @@ new_hydrobudget <- function(T_m, C_m, TT_F, F_T, t_API, f_runoff, sw_m, f_inf, g
       # soil parameters
       sw_m = sw_m,
       f_inf = f_inf,
-      grad = grad,
+      mult_pet = mult_pet,
+      grad_pet = grad_pet,
       sw_init = 50
     ),
     rcn_columns = list(
@@ -143,7 +145,7 @@ compute_recharge.hydrobudget <- function(obj, rcn, climate, rcn_climate, period 
   # Find minimum and maximum latitudes
   lat_min=min(climate_data$lat)
   lat_max=max(climate_data$lat)
-  climate_data$pet_mult = grad - (climate_data$lat - lat_min) / (lat_max - lat_min) * (grad-1)
+  climate_data$grad_val = grad_pet - (climate_data$lat - lat_min) / (lat_max - lat_min) * (grad_pet-1)
 
   # time tracking starts after data were loaded
   verbose <- .is.verbose()
@@ -226,7 +228,7 @@ compute_vertical_inflow <- function(obj, climate_data) {
   climate_data_vi$vi <- climate_data_vi$rain + climate_data_vi$melt
 
   # Adjust PET with gradient on latitudes
-  climate_data_vi$PET = climate_data_vi$PET * climate_data_vi$pet_mult 
+  climate_data_vi$PET = climate_data_vi$PET * climate_data_vi$grad_val * mult_pet
 
   climate_data_vi[, c("climate_id", "day", "month", "year", "julian_day", "t_mean", "p_tot", "vi", "PET")]
 }
